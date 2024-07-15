@@ -1,6 +1,7 @@
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { Camera2d } from "../core/graphics/Camera2d";
+import { V } from "../core/Vector";
 import { Cart } from "./Cart";
 
 export class CameraController extends BaseEntity implements Entity {
@@ -13,18 +14,12 @@ export class CameraController extends BaseEntity implements Entity {
     this.camera = camera;
     this.cart = cart;
     this.camera.z = 100;
+    this.camera.center(this.cart.getPosition());
   }
 
   onLateRender() {
-    this.camera.position.set(this.cart.getPosition());
-  }
-
-  onTick(dt: number) {
-    if (this.game!.io.isKeyDown("KeyQ")) {
-      this.camera.z *= 1.2 ** dt;
-    }
-    if (this.game!.io.isKeyDown("KeyE")) {
-      this.camera.z *= 0.8 ** dt;
-    }
+    const velocity = V(this.cart.body.velocity);
+    this.camera.smoothCenter(this.cart.getPosition(), velocity, 0.2);
+    this.camera.smoothZoom(130 - 2 * velocity.magnitude);
   }
 }
