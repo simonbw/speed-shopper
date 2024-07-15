@@ -141,40 +141,38 @@ export default class Game {
 
   /** TODO: Document onResize */
   onResize(size: [number, number]) {
-    for (const entity of this.entities.getHandlers("resize")) {
-      entity.onResize({ size: V(size) });
-    }
+    this.dispatch("resize", { size: V(size) });
   }
 
   /**
    * Pauses the game. This stops physics from running, calls onPause()
    * handlers, and stops updating `pausable` entities.
-   **/
+   */
   pause() {
     if (!this.paused) {
       this.paused = true;
-      for (const entity of this.entities.getHandlers("pause")) {
-        entity.onPause!();
-      }
+      this.dispatch("pause", undefined);
     }
   }
 
   /** Resumes the game and calls onUnpause() handlers. */
   unpause() {
     this.paused = false;
-    for (const entity of this.entities.getHandlers("unpause")) {
-      entity.onUnpause!();
-    }
+    this.dispatch("unpause", undefined);
   }
 
   /** Dispatch an event. */
   dispatch<EventName extends keyof GameEventMap>(
     eventName: EventName,
-    data: GameEventMap[EventName]
+    data: GameEventMap[EventName],
+    respectPause = true
   ) {
+    const effectivelyPaused = respectPause && this.paused;
     for (const entity of this.entities.getHandlers(eventName)) {
-      const functionName = eventHandlerName(eventName);
-      entity[functionName](data);
+      if (entity.game && !(effectivelyPaused && !entity.pausable)) {
+        const functionName = eventHandlerName(eventName);
+        entity[functionName](data);
+      }
     }
   }
 
@@ -244,7 +242,7 @@ export default class Game {
   };
 
   /** Shortcut for adding multiple entities. */
-  addEntities<T extends readonly Entity[]>(entities: T): T {
+  addEntities<T extends readonly Entity[]>(...entities: T): T {
     for (const entity of entities) {
       this.addEntity(entity);
     }
@@ -380,52 +378,26 @@ export default class Game {
   /** Called before physics. */
   private tick(dt: number) {
     this.ticknumber += 1;
-    for (const entity of this.entities.getHandlers("beforeTick")) {
-      if (entity.game && !(this.paused && entity.pausable)) {
-        entity.onBeforeTick();
-      }
-    }
-    for (const entity of this.entities.getHandlers("tick")) {
-      if (entity.game && !(this.paused && entity.pausable)) {
-        entity.onTick(dt);
-      }
-    }
+    this.dispatch("beforeTick", dt);
+    this.dispatch("tick", dt);
   }
 
   /** Called before normal ticks */
   private slowTick(dt: number) {
-    for (const entity of this.entities.getHandlers("slowTick")) {
-      if (entity.game && !(this.paused && entity.pausable)) {
-        entity.onSlowTick(dt);
-      }
-    }
+    this.dispatch("slowTick", dt);
   }
 
   /** Called after physics. */
   private afterPhysics() {
     this.cleanupEntities();
-    for (const entity of this.entities.getHandlers("afterPhysics")) {
-      if (entity.game && !(this.paused && entity.pausable)) {
-        entity.onAfterPhysics();
-      }
-    }
+    this.dispatch("afterPhysics", undefined);
   }
 
   /** Called before actually rendering. */
   private render(dt: number) {
     this.cleanupEntities();
-    for (const entity of this.entities.getHandlers("render")) {
-      if (entity.game) {
-        entity.onRender(dt);
-      } else {
-        console.warn(`entity doesn't have game`);
-      }
-    }
-    for (const entity of this.entities.getHandlers("lateRender")) {
-      if (entity.game) {
-        entity.onLateRender(dt);
-      }
-    }
+    this.dispatch("render", dt);
+    this.dispatch("lateRender", dt);
     this.renderer.render();
   }
 

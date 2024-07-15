@@ -1,8 +1,21 @@
 import { V } from "../core/Vector";
 import { LayerInfo } from "../core/graphics/LayerInfo";
 
-/** TODO: Document layers */
+/** Top */
 export const LAYERS = {
+  // The floor
+  floor: new LayerInfo(),
+  // Skid marks and stuff
+  floorDecals: new LayerInfo(),
+  // Ambient occlusion for walls
+  "wall-ao": new LayerInfo(),
+  // Walls
+  walls: new LayerInfo(),
+  // Cart wheels
+  wheels: new LayerInfo(),
+  // Cart
+  cart: new LayerInfo(),
+
   // DEFAULT: The main stuff
   main: new LayerInfo(),
   // Stuff not in the world

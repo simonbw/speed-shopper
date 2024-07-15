@@ -7,7 +7,6 @@ import { GameSprite } from "./GameSprite";
 
 /**
  * Base class for lots of stuff in the game.
- * TODO: Document BaseEntity better.
  */
 export default abstract class BaseEntity implements Entity {
   bodies?: p2.Body[];
@@ -180,7 +179,7 @@ class Timer extends BaseEntity implements Entity {
     this.duringEffect = duringEffect;
   }
 
-  onTick({ dt }: { dt: number }) {
+  onTick(dt: number) {
     this.timeRemaining -= dt;
     const t = clamp(1.0 - this.timeRemaining / this.delay);
     this.duringEffect?.(dt, t);

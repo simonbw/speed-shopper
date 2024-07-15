@@ -1,4 +1,5 @@
-import { Container } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
+import { ImageName } from "../../../resources/resources";
 import { LayerName } from "../../config/layers";
 import { WithOwner } from "./WithOwner";
 
@@ -8,4 +9,13 @@ import { WithOwner } from "./WithOwner";
  */
 export interface GameSprite extends Container, WithOwner {
   layerName?: LayerName;
+}
+
+export function loadGameSprite(
+  name: ImageName,
+  layerName: LayerName
+): Sprite & GameSprite {
+  const sprite = Sprite.from(name) as Sprite & GameSprite;
+  sprite.layerName = layerName;
+  return sprite;
 }

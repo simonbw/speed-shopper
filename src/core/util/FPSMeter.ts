@@ -1,6 +1,5 @@
 import { Container, Text } from "pixi.js";
 import { LayerName } from "../../config/layers";
-import Game from "../Game";
 import BaseEntity from "../entity/BaseEntity";
 import Entity from "../entity/Entity";
 import { GameSprite } from "../entity/GameSprite";

@@ -1,7 +1,7 @@
 {
-  "name": "game-engine",
+  "name": "speed-shopper",
   "version": "1.0.0",
-  "description": "My starter project for making lots of games",
+  "description": "A game where you shop quickly",
   "scripts": {
     "start": "rm -rf .parcel-cache && concurrently -n assets,server \"npm run watch-manifest\" \"npm run dev-server\"",
     "dev-server": "parcel src/index.html",
@@ -14,11 +14,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonbw/game-engine.git"
+    "url": "git+https://github.com/simonbw/speed-shopper.git"
   },
   "author": "",
   "license": "UNLICENSED",
-  "homepage": "https://github.com/simonbw/game-engine#readme",
+  "homepage": "https://github.com/simonbw/speed-shopper#readme",
   "dependencies": {
     "@parcel/macros": "^2.12.0",
     "@parcel/resolver-glob": "^2.12.0",
