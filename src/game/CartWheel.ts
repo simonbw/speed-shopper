@@ -65,7 +65,6 @@ export class CartWheel extends BaseEntity implements Entity {
     if (tractionForce.magnitude > maxTraction) {
       this.skidding = true;
       tractionForce.magnitude = maxTraction;
-      this.game!.addEntity(new SkidMark(this.getPosition(), this.body.angle));
     } else {
       this.skidding = false;
     }
@@ -81,5 +80,9 @@ export class CartWheel extends BaseEntity implements Entity {
   onRender() {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;
+
+    if (this.skidding) {
+      this.game!.addEntity(new SkidMark(this.getPosition(), this.body.angle));
+    }
   }
 }

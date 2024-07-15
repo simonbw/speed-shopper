@@ -107,6 +107,23 @@ export default abstract class BaseEntity implements Entity {
   }
 
   /**
+   * Fulfills after the given amount of game time.
+   * Use with delay=0 to wait until the next tick.
+   * @param onRender  Do something every render while waiting
+   */
+  waitRender(
+    delay: number = 0,
+    onRender?: (dt: number, t: number) => void,
+    timerId?: string
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      const timer = new RenderTimer(delay, () => resolve(), onRender, timerId);
+      timer.persistenceLevel = this.persistenceLevel;
+      this.addChild(timer);
+    });
+  }
+
+  /**
    * Wait until a condition is filled. Probably not great to use, but seems kinda cool too.
    */
   waitUntil(
@@ -180,6 +197,34 @@ class Timer extends BaseEntity implements Entity {
   }
 
   onTick(dt: number) {
+    this.timeRemaining -= dt;
+    const t = clamp(1.0 - this.timeRemaining / this.delay);
+    this.duringEffect?.(dt, t);
+    if (this.timeRemaining <= 0) {
+      this.endEffect?.();
+      this.destroy();
+    }
+  }
+}
+
+class RenderTimer extends BaseEntity implements Entity {
+  timeRemaining: number = 0;
+  endEffect?: () => void;
+  duringEffect?: (dt: number, t: number) => void;
+
+  constructor(
+    private delay: number,
+    endEffect?: () => void,
+    duringEffect?: (dt: number, t: number) => void,
+    public timerId?: string
+  ) {
+    super();
+    this.timeRemaining = delay;
+    this.endEffect = endEffect;
+    this.duringEffect = duringEffect;
+  }
+
+  onRender(dt: number) {
     this.timeRemaining -= dt;
     const t = clamp(1.0 - this.timeRemaining / this.delay);
     this.duringEffect?.(dt, t);

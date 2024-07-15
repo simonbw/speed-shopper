@@ -20,7 +20,7 @@ export class SkidMark extends BaseEntity implements Entity {
   }
 
   onAdd() {
-    this.wait(
+    this.waitRender(
       10,
       (_, t) => (this.sprite.alpha = lerp(0.1, 0, smoothStep(t)))
     ).then(() => this.destroy());
