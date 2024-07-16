@@ -16,6 +16,8 @@ export const LAYERS = {
   // Cart
   cart: new LayerInfo(),
 
+  player: new LayerInfo(),
+
   // DEFAULT: The main stuff
   main: new LayerInfo(),
   // Stuff not in the world

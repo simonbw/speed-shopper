@@ -13,7 +13,7 @@ export interface GameSprite extends Container, WithOwner {
 
 export function loadGameSprite(
   name: ImageName,
-  layerName: LayerName
+  layerName?: LayerName
 ): Sprite & GameSprite {
   const sprite = Sprite.from(name) as Sprite & GameSprite;
   sprite.layerName = layerName;

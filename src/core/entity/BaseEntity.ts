@@ -19,6 +19,7 @@ export default abstract class BaseEntity implements Entity {
   persistenceLevel: number = 0;
   springs?: Spring[];
   id?: string;
+  tags: string[] = [];
   sprite?: GameSprite;
   sprites?: GameSprite[];
 
@@ -27,6 +28,15 @@ export default abstract class BaseEntity implements Entity {
     if (this.body) {
       const result: V2d = V(0, 0);
       this.body.toWorldFrame(result, localPoint);
+      return result;
+    }
+    return V(0, 0);
+  }
+
+  worldToLocal(worldPoint: [number, number]): V2d {
+    if (this.body) {
+      const result: V2d = V(0, 0);
+      this.body.toLocalFrame(result, worldPoint);
       return result;
     }
     return V(0, 0);

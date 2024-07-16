@@ -28,7 +28,7 @@ export class CartWheel extends BaseEntity implements Entity {
 
     this.body = new Body({
       type: Body.DYNAMIC,
-      mass: 0.01,
+      mass: 0.5,
       position,
     });
 
@@ -70,7 +70,7 @@ export class CartWheel extends BaseEntity implements Entity {
     }
     this.body.applyForce(tractionForce);
 
-    const dragForce = velocity.mul(this.skidding ? -1 : -0.1);
+    const dragForce = velocity.mul(this.skidding ? -0.5 : -0.1);
     this.body.applyForce(dragForce);
 
     const angularFrictionAmount = this.body.angularVelocity * -0.00001;

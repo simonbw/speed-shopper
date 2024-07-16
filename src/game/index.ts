@@ -6,6 +6,8 @@ import { Cart } from "./Cart";
 import { GamePreloader } from "./GamePreloader";
 import Wall from "./Wall";
 import { CameraController } from "./CameraController";
+import { Human } from "./Human";
+import { PlayerController } from "./PlayerController";
 
 // Do this so we can access the game from the console
 declare global {
@@ -16,7 +18,7 @@ declare global {
 
 async function main() {
   // Make the pixel art crisp
-  TextureStyle.defaultOptions.scaleMode = "nearest";
+  TextureStyle.defaultOptions.scaleMode = "linear";
 
   const game = new Game({ tickIterations: 100 });
   await game.init({ rendererOptions: { backgroundColor: 0x444454 } });
@@ -33,14 +35,18 @@ async function main() {
     game.addEntity(fpsMeter);
   }
 
-  const cart = game.addEntity(new Cart(V(5, 5)));
+  const cart = game.addEntity(new Cart(V(5, 3)));
+  const playerHuman = game.addEntity(
+    new Human({ position: V(5, 5), angle: 0, runSpeed: 10, walkSpeed: 5 })
+  );
+  game.addEntity(new PlayerController(playerHuman, cart));
   game.addEntity(new CameraController(game.camera, cart));
 
   game.addEntities(
-    new Wall([0, 0], [10, 0]),
-    new Wall([10, 0], [10, 10]),
-    new Wall([10, 10], [0, 10]),
-    new Wall([0, 10], [0, 0])
+    new Wall([0, 0], [20, 0]),
+    new Wall([20, 0], [20, 20]),
+    new Wall([20, 20], [0, 20]),
+    new Wall([0, 20], [0, 0])
   );
 }
 

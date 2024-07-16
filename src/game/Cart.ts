@@ -15,6 +15,8 @@ export class Cart extends BaseEntity implements Entity {
   constructor(position: [number, number]) {
     super();
 
+    this.tags.push("cart");
+
     this.sprite = loadGameSprite("cart", "cart");
     this.sprite.anchor.set(0.5, 0.5);
     this.sprite.setSize(1, 1);
@@ -47,9 +49,19 @@ export class Cart extends BaseEntity implements Entity {
     this.addChildren(frontLeft, frontRight, backLeft, backRight);
   }
 
-  onTick() {
-    const [rotational, axial] = this.game!.io.getMovementVector();
+  public getLocalHandPositions() {
+    const handWidth = 0.3;
+    const leftHandPosition = V(-handWidth, 0.5);
+    const rightHandPosition = V(handWidth, 0.5);
+    return [leftHandPosition, rightHandPosition];
+  }
 
+  public getHandPositions() {
+    const [leftLocal, rightLocal] = this.getLocalHandPositions();
+    return [this.localToWorld(leftLocal), this.localToWorld(rightLocal)];
+  }
+
+  public push(rotational: number, axial: number) {
     const pushStrength = 5.0;
     const leftHandForce = V(0, 1)
       .imul(1.0 * axial - 0.5 * rotational)
@@ -58,17 +70,17 @@ export class Cart extends BaseEntity implements Entity {
       .imul(1.0 * axial + 0.5 * rotational)
       .imul(pushStrength);
 
-    const handWidth = 1.5;
-    const leftHandPosition = V(-handWidth, -0.5);
-    const rightHandPosition = V(handWidth, -0.5);
+    const [leftHandPosition, rightHandPosition] = this.getLocalHandPositions();
     // Apply left hand force
     this.body.applyForceLocal(leftHandForce, leftHandPosition);
     this.body.applyForceLocal(rightHandForce, rightHandPosition);
 
-    if (this.game?.io.isKeyDown("ShiftLeft")) {
-      for (const wheel of this.wheels) {
-        wheel.skidding = true;
-      }
+    this.body.angularForce += 0.1 * rotational;
+  }
+
+  public skid() {
+    for (const wheel of this.wheels) {
+      wheel.skidding = true;
     }
   }
 
