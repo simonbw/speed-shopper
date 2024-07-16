@@ -1,19 +1,17 @@
 import { Body, Circle } from "p2";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
+import AimSpring from "../core/physics/AimSpring";
 import { V, V2d } from "../core/Vector";
+import { Cart } from "./Cart";
+import { CartSpring } from "./CartSpring";
 import { CollisionGroups } from "./config/CollisionGroups";
 import { HumanSprite } from "./HumanSprite";
 import { WalkSoundPlayer } from "./WalkSoundPlayer";
 import { WalkSpring } from "./WalkSpring";
-import { Cart } from "./Cart";
-import { CartSpring } from "./CartSpring";
+import { normalizeAngle } from "../core/util/MathUtil";
 
-const WALKING_STEPS_PER_METER = 0.4;
-const RUNNING_STEPS_PER_METER = 0.4;
-
-// Copied from ld-55
-// TODO: Comment and review this file
+const STEPS_PER_METER = 0.4;
 
 export class Human extends BaseEntity implements Entity {
   body: Body;
@@ -21,8 +19,8 @@ export class Human extends BaseEntity implements Entity {
 
   walkSoundPlayer: WalkSoundPlayer;
   walkSpring: WalkSpring;
+  aimSpring: AimSpring;
 
-  running: boolean = false;
   percentThroughStride: number = 0;
   lastDistanceMoved: number = 0;
   humanSprite: HumanSprite;
@@ -35,17 +33,15 @@ export class Human extends BaseEntity implements Entity {
       position: V2d;
       angle: number;
       walkSpeed: number;
-      runSpeed: number;
     }
   ) {
     super();
 
     this.body = new Body({
-      mass: 0.5,
+      mass: 1,
       angle: options.angle,
       position: options.position.clone(),
-      damping: 0,
-      angularDamping: 0,
+      damping: 10,
     });
 
     const radius = 0.3; // meters
@@ -71,38 +67,46 @@ export class Human extends BaseEntity implements Entity {
 
     this.walkSoundPlayer = this.addChild(new WalkSoundPlayer(this));
     this.walkSpring = this.addChild(new WalkSpring(this.body));
+    this.aimSpring = new AimSpring(this.body);
+
+    this.springs = [this.aimSpring];
   }
 
   grabCart(cart: Cart) {
     if (!this.cart) {
       this.cart = cart;
-      this.cartSpring = this.addChild(new CartSpring(this, cart));
+      // this.cartSpring = this.addChild(new CartSpring(this, cart));
       // this.walkSpring.enabled = false;
     }
   }
 
   releaseCart() {
     this.cart = undefined;
-    this.cartSpring?.destroy();
+    // this.cartSpring?.destroy();
     // this.walkSpring.enabled = true;
+  }
+
+  public aimAt(position: [number, number]) {
+    const offset = this.getPosition().isub(position).imul(-1);
+    this.aimSpring.restAngle = normalizeAngle(offset.angle);
   }
 
   /** Called every update cycle */
   onTick(dt: number) {
-    // this.body.applyDamping(200 * dt);
-    this.walkSpring.speed = this.running
-      ? this.options.runSpeed
-      : this.options.walkSpeed;
-    this.walkSpring.acceleration = 20;
-
     const distanceMoved = V(this.body.velocity).magnitude * dt;
+
+    if (this.cart) {
+      this.walkSpring.acceleration = 8;
+      this.walkSpring.speed = 30;
+    } else {
+      this.walkSpring.acceleration = 6;
+      this.walkSpring.speed = 9;
+    }
 
     const stopThreshold = 0.001;
     if (distanceMoved > stopThreshold) {
       const lastPercentThroughStep = this.percentThroughStride;
-      const stepsPerMeter = this.running
-        ? RUNNING_STEPS_PER_METER
-        : WALKING_STEPS_PER_METER;
+      const stepsPerMeter = STEPS_PER_METER;
       this.percentThroughStride += distanceMoved * stepsPerMeter;
 
       // If we've taken a new step
@@ -126,10 +130,5 @@ export class Human extends BaseEntity implements Entity {
         this.walkSoundPlayer.playFootstep();
       }
     }
-  }
-
-  public walk(angle: number, running: boolean): void {
-    this.walkSpring.walkTowards(angle, running ? 1 : 0.5);
-    this.percentThroughStride;
   }
 }

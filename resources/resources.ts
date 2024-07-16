@@ -13,6 +13,8 @@ export type SoundName = keyof typeof sounds;
 const images = {
   wallAo1: require("./images/wall-ao-1.png"),
   wall1: require("./images/wall-1.png"),
+  tileFloor14: require("./images/tile-floor-14.jpg"),
+  tileFloor13: require("./images/tile-floor-13.jpg"),
   faviconOld: require("./images/favicon-old.png"),
   demitriTorso: require("./images/demitri-torso.png"),
   demitriRightHand: require("./images/demitri-right-hand.png"),
@@ -21,7 +23,8 @@ const images = {
   demitriLeftArm: require("./images/demitri-left-arm.png"),
   demitriHead: require("./images/demitri-head.png"),
   cart: require("./images/cart.png"),
-  cartWheel: require("./images/cart-wheel.png")
+  cartWheel: require("./images/cart-wheel.png"),
+  bathroomTileFloor1: require("./images/bathroom-tile-floor-1.png")
 };
 export type ImageName = keyof typeof images;
 

@@ -6,6 +6,9 @@ import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { V } from "../core/Vector";
 import { CartWheel } from "./CartWheel";
 
+const PUSH_STRENGTH = 8.0;
+const PUSH_TORQUE = 0.15;
+
 export class Cart extends BaseEntity implements Entity {
   sprite: Sprite & GameSprite;
   body: Body;
@@ -42,8 +45,8 @@ export class Cart extends BaseEntity implements Entity {
 
     const frontLeft = new CartWheel(this, V(-(fw - 0.15), -0.28), false);
     const frontRight = new CartWheel(this, V(fw - 0.15, -0.28), false);
-    const backLeft = new CartWheel(this, V(-(bw - 0.03), 0.38), true);
-    const backRight = new CartWheel(this, V(bw - 0.03, 0.38), true);
+    const backLeft = new CartWheel(this, V(-(bw - 0.08), 0.3), true);
+    const backRight = new CartWheel(this, V(bw - 0.08, 0.3), true);
 
     this.wheels = [frontLeft, frontRight, backLeft, backRight];
     this.addChildren(frontLeft, frontRight, backLeft, backRight);
@@ -62,20 +65,19 @@ export class Cart extends BaseEntity implements Entity {
   }
 
   public push(rotational: number, axial: number) {
-    const pushStrength = 5.0;
     const leftHandForce = V(0, 1)
-      .imul(1.0 * axial - 0.5 * rotational)
-      .imul(pushStrength);
+      .imul(axial - rotational)
+      .imul(PUSH_STRENGTH);
     const rightHandForce = V(0, 1)
-      .imul(1.0 * axial + 0.5 * rotational)
-      .imul(pushStrength);
+      .imul(axial + rotational)
+      .imul(PUSH_STRENGTH);
 
     const [leftHandPosition, rightHandPosition] = this.getLocalHandPositions();
     // Apply left hand force
     this.body.applyForceLocal(leftHandForce, leftHandPosition);
     this.body.applyForceLocal(rightHandForce, rightHandPosition);
 
-    this.body.angularForce += 0.1 * rotational;
+    this.body.angularForce += PUSH_TORQUE * rotational;
   }
 
   public skid() {

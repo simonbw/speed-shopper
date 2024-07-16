@@ -8,6 +8,7 @@ import Wall from "./Wall";
 import { CameraController } from "./CameraController";
 import { Human } from "./Human";
 import { PlayerController } from "./PlayerController";
+import { Floor } from "./Floor";
 
 // Do this so we can access the game from the console
 declare global {
@@ -37,10 +38,10 @@ async function main() {
 
   const cart = game.addEntity(new Cart(V(5, 3)));
   const playerHuman = game.addEntity(
-    new Human({ position: V(5, 5), angle: 0, runSpeed: 10, walkSpeed: 5 })
+    new Human({ position: V(5, 5), angle: 0, walkSpeed: 5 })
   );
   game.addEntity(new PlayerController(playerHuman, cart));
-  game.addEntity(new CameraController(game.camera, cart));
+  game.addEntity(new CameraController(game.camera, playerHuman));
 
   game.addEntities(
     new Wall([0, 0], [20, 0]),
@@ -48,6 +49,8 @@ async function main() {
     new Wall([20, 20], [0, 20]),
     new Wall([0, 20], [0, 0])
   );
+
+  game.addEntity(new Floor(V(0, 0), V(20, 20), "tileFloor14", 0.005));
 }
 
 window.addEventListener("load", main);

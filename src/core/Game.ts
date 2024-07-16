@@ -75,6 +75,10 @@ export default class Game {
     return this.renderer.camera;
   }
 
+  get averageDt() {
+    return this.slowMo / (this.averageFrameDuration * this.tickIterations);
+  }
+
   private _slowMo: number = 1.0;
   /** Multiplier of time that passes during tick */
   get slowMo() {

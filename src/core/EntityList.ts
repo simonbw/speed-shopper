@@ -40,14 +40,8 @@ export default class EntityList implements Iterable<Entity> {
     }
 
     for (const methodName of getAllMethods(entity)) {
-      console.log("fieldName", methodName);
       if (methodName.startsWith("on")) {
         this.handlers.add(handlerNameToEventName(methodName), entity);
-        console.log(
-          "Added handler",
-          handlerNameToEventName(methodName),
-          methodName
-        );
       }
     }
 
@@ -71,9 +65,9 @@ export default class EntityList implements Iterable<Entity> {
       }
     }
 
-    for (const [fieldName, value] of Object.entries(entity)) {
-      if (fieldName.startsWith("on") && typeof value === "function") {
-        this.handlers.remove(handlerNameToEventName(fieldName), entity);
+    for (const methodName of getAllMethods(entity)) {
+      if (methodName.startsWith("on")) {
+        this.handlers.remove(handlerNameToEventName(methodName), entity);
       }
     }
 

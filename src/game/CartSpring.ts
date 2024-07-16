@@ -13,8 +13,8 @@ export class CartSpring extends BaseEntity implements Entity {
     super();
 
     const armLength = 0.32;
-    const damping = 2;
-    const stiffness = 50;
+    const damping = 5;
+    const stiffness = 100;
 
     const [leftHandPosition, rightHandPosition] = cart.getLocalHandPositions();
     const leftSpring = new LinearSpring(this.human.body, this.cart.body, {
@@ -32,19 +32,6 @@ export class CartSpring extends BaseEntity implements Entity {
       stiffness,
     });
 
-    const midpoint = leftHandPosition
-      .add(rightHandPosition)
-      .imul(0.5)
-      .iadd(V(0, armLength));
-
-    const centerSpring = new LinearSpring(this.human.body, this.cart.body, {
-      localAnchorA: V(0, 0),
-      localAnchorB: midpoint,
-      restLength: 0,
-      damping,
-      stiffness,
-    });
-
-    this.springs = [leftSpring, rightSpring, centerSpring];
+    this.springs = [leftSpring, rightSpring];
   }
 }

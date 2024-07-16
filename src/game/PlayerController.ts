@@ -1,6 +1,7 @@
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { KeyCode } from "../core/io/Keys";
+import { clamp } from "../core/util/MathUtil";
 import { Cart } from "./Cart";
 import { Human } from "./Human";
 
@@ -35,12 +36,14 @@ export class PlayerController extends BaseEntity implements Entity {
         cart.skid();
       }
 
-      this.cart.push(rotational, 0);
+      cart.push(rotational, axial);
 
-      const humanDirection = this.human.body.angle;
-      this.human.walkSpring.walkTowards(humanDirection, -axial);
+      const pushingPosition = cart.localToWorld([0, 0.5 + 0.3 + 0.15 * axial]);
+      const pushOffset = pushingPosition.sub(this.human.getPosition());
+      const correctionAmount = clamp(3 * pushOffset.magnitude);
+      this.human.walkSpring.walkTowards(pushOffset.angle, correctionAmount);
 
-      this.human.body.angularForce += rotational * 0.1;
+      this.human.aimAt(cart.getPosition());
     } else {
       // Walking
       const walkDirection = io.getMovementVector();

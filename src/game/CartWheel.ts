@@ -8,6 +8,19 @@ import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
 import { SkidMark } from "./SkidMark";
 
+// How far the swivel arm on the front casters are
+const SWIVEL_RADIUS = 0.04;
+
+// Linear and angular friction coefficients
+const ROLLING_FRICTION = 0.3;
+const SKIDDING_FRICTION = 0.8;
+const ANGULAR_FRICTION = 0.00001;
+
+// Point at which the wheel starts skidding
+const MAX_TRACTION = 15;
+const MAX_TRACTION_SKIDDING = 6.5;
+const TRACTION_COEFFICIENT = 20;
+
 export class CartWheel extends BaseEntity implements Entity {
   sprite: Sprite & GameSprite;
   body: Body;
@@ -21,14 +34,14 @@ export class CartWheel extends BaseEntity implements Entity {
     this.sprite.anchor.set(0.5, 0.5);
     this.sprite.setSize(0.2);
 
-    const swivelAmount = 0.03;
+    const swivelAmount = SWIVEL_RADIUS;
     const position = fixed
       ? cart.localToWorld(positionOnCart)
       : cart.localToWorld(positionOnCart.add([0, swivelAmount]));
 
     this.body = new Body({
       type: Body.DYNAMIC,
-      mass: 0.5,
+      mass: 0.1,
       position,
     });
 
@@ -47,8 +60,6 @@ export class CartWheel extends BaseEntity implements Entity {
       const revoluteConstraint = new RevoluteConstraint(cart.body, this.body, {
         worldPivot: cart.localToWorld(positionOnCart),
       });
-      revoluteConstraint.setStiffness(100000000);
-      revoluteConstraint.setRelaxation(1);
       this.constraints = [revoluteConstraint];
     }
   }
@@ -59,9 +70,9 @@ export class CartWheel extends BaseEntity implements Entity {
     const velocity = V(this.body.velocity);
 
     const normalAmount = velocity.dot(normal);
-    const tractionForce = normal.mul(-normalAmount * 20);
+    const tractionForce = normal.mul(-normalAmount).imul(TRACTION_COEFFICIENT);
 
-    const maxTraction = this.skidding ? 10 : 20;
+    const maxTraction = this.skidding ? MAX_TRACTION_SKIDDING : MAX_TRACTION;
     if (tractionForce.magnitude > maxTraction) {
       this.skidding = true;
       tractionForce.magnitude = maxTraction;
@@ -70,10 +81,14 @@ export class CartWheel extends BaseEntity implements Entity {
     }
     this.body.applyForce(tractionForce);
 
-    const dragForce = velocity.mul(this.skidding ? -0.5 : -0.1);
-    this.body.applyForce(dragForce);
+    const forwardAmount = velocity.dot(forward);
 
-    const angularFrictionAmount = this.body.angularVelocity * -0.00001;
+    const rollingFriction = forward
+      .imul(-forwardAmount)
+      .mul(this.skidding ? SKIDDING_FRICTION : ROLLING_FRICTION);
+    this.body.applyForce(rollingFriction);
+
+    const angularFrictionAmount = this.body.angularVelocity * -ANGULAR_FRICTION;
     this.body.angularForce += angularFrictionAmount;
   }
 
