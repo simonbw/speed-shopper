@@ -27,10 +27,10 @@ export class WalkSpring extends BaseEntity implements Entity {
 
   onTick() {
     if (this.enabled) {
-      const force = vec2.create();
-      vec2.sub(force, this.targetVelocity, this.humanBody.velocity);
-      vec2.scale(force, force, this.acceleration);
-      vec2.scale(force, force, this.humanBody.mass);
+      const force = this.targetVelocity
+        .sub(this.humanBody.velocity)
+        .imul(this.acceleration)
+        .imul(this.humanBody.mass);
 
       this.humanBody.applyForce(force);
     }

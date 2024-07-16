@@ -6,7 +6,10 @@ const sounds = {
   footstepSoft1: require("url:./audio/footstep-soft-1.flac"),
   footstepSlide: require("url:./audio/footstep-slide.flac"),
   footstepLoud2: require("url:./audio/footstep-loud-2.flac"),
-  footstepLoud1: require("url:./audio/footstep-loud-1.flac")
+  footstepLoud1: require("url:./audio/footstep-loud-1.flac"),
+  cartImpact3: require("url:./audio/cart-impact-3.flac"),
+  cartImpact2: require("url:./audio/cart-impact-2.flac"),
+  cartImpact1: require("url:./audio/cart-impact-1.flac")
 };
 export type SoundName = keyof typeof sounds;
 

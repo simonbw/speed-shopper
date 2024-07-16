@@ -18,7 +18,7 @@ export class PlayerController extends BaseEntity implements Entity {
     if (key === "Space") {
       if (this.human.cart === undefined) {
         const carts = this.game!.entities.getByFilter(isCart);
-        const cart = getClosest(this.human.getPosition(), carts, 1);
+        const cart = getClosest(this.human.getPosition(), carts, 1.25);
 
         if (cart) {
           this.human.grabCart(cart);

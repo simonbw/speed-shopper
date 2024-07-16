@@ -5,9 +5,18 @@ import Entity from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { V } from "../core/Vector";
 import { CartWheel } from "./CartWheel";
+import { SoundName } from "../../resources/resources";
+import { PositionalSound } from "../core/sound/PositionalSound";
+import { choose, rUniform } from "../core/util/Random";
 
 const PUSH_STRENGTH = 7.0;
 const PUSH_TORQUE = 0.15;
+
+const IMPACT_SOUNDS: SoundName[] = [
+  "cartImpact1",
+  "cartImpact2",
+  "cartImpact3",
+];
 
 export class Cart extends BaseEntity implements Entity {
   sprite: Sprite & GameSprite;
@@ -89,6 +98,16 @@ export class Cart extends BaseEntity implements Entity {
   onRender() {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;
+  }
+
+  onImpact() {
+    const sound = choose(...IMPACT_SOUNDS);
+    this.game?.addEntity(
+      new PositionalSound(sound, this.getPosition(), {
+        gain: 0.5,
+        speed: rUniform(0.9, 1.1),
+      })
+    );
   }
 }
 

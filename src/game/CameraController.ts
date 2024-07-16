@@ -4,12 +4,14 @@ import Entity from "../core/entity/Entity";
 import { Camera2d } from "../core/graphics/Camera2d";
 import { V, V2d } from "../core/Vector";
 import { Human } from "./Human";
+import PositionalSoundListener from "../core/sound/PositionalSoundListener";
 
 type Target = { getPosition: () => V2d; body: Body };
 
 export class CameraController extends BaseEntity implements Entity {
   camera: Camera2d;
   player: Human;
+  soundListener: PositionalSoundListener;
 
   constructor(camera: Camera2d, player: Human) {
     super();
@@ -18,6 +20,8 @@ export class CameraController extends BaseEntity implements Entity {
     this.player = player;
     this.camera.z = 100;
     this.camera.center(this.player.getPosition());
+
+    this.soundListener = this.addChild(new PositionalSoundListener());
   }
 
   onLateRender() {
@@ -25,5 +29,7 @@ export class CameraController extends BaseEntity implements Entity {
     const velocity = V(target.body.velocity);
     this.camera.smoothCenter(target.getPosition(), velocity, 0.3, 0.15);
     this.camera.smoothZoom(130 - 2 * velocity.magnitude);
+
+    this.soundListener.setPosition(this.camera.position);
   }
 }
