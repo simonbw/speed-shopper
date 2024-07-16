@@ -6,7 +6,7 @@ import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { V } from "../core/Vector";
 import { CartWheel } from "./CartWheel";
 
-const PUSH_STRENGTH = 8.0;
+const PUSH_STRENGTH = 7.0;
 const PUSH_TORQUE = 0.15;
 
 export class Cart extends BaseEntity implements Entity {
@@ -90,4 +90,8 @@ export class Cart extends BaseEntity implements Entity {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;
   }
+}
+
+export function isCart(entity: Entity): entity is Cart {
+  return entity instanceof Cart;
 }

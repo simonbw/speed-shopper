@@ -7,8 +7,8 @@ export const LAYERS = {
   floor: new LayerInfo(),
   // Skid marks and stuff
   floorDecals: new LayerInfo(),
-  // Ambient occlusion for walls
-  "wall-ao": new LayerInfo(),
+  // Shadows and ambient occlusion
+  shadows: new LayerInfo(),
   // Walls
   walls: new LayerInfo(),
   // Cart wheels

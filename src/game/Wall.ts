@@ -20,7 +20,7 @@ export default class Wall extends BaseEntity implements Entity {
     const drawHeight = length + width / 2; // add in width to make things line up nicely
 
     // TODO: AO Breaks on outside corners
-    const aoSprite = loadGameSprite("wallAo1", "wall-ao");
+    const aoSprite = loadGameSprite("wallAo1", "shadows");
     aoSprite.blendMode = "multiply";
     aoSprite.anchor.set(0.5, 0.5);
     aoSprite.width = drawHeight;

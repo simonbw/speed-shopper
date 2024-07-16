@@ -2,23 +2,27 @@ import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { KeyCode } from "../core/io/Keys";
 import { clamp } from "../core/util/MathUtil";
-import { Cart } from "./Cart";
+import { isCart } from "./Cart";
+import { getClosest } from "./getClosest";
 import { Human } from "./Human";
 
 export class PlayerController extends BaseEntity implements Entity {
   human: Human;
-  cart: Cart;
 
-  constructor(human: Human, cart: Cart) {
+  constructor(human: Human) {
     super();
     this.human = human;
-    this.cart = cart;
   }
 
   onKeyDown({ key }: { key: KeyCode }) {
     if (key === "Space") {
       if (this.human.cart === undefined) {
-        this.human.grabCart(this.cart);
+        const carts = this.game!.entities.getByFilter(isCart);
+        const cart = getClosest(this.human.getPosition(), carts, 1);
+
+        if (cart) {
+          this.human.grabCart(cart);
+        }
       } else {
         this.human.releaseCart();
       }
@@ -27,12 +31,13 @@ export class PlayerController extends BaseEntity implements Entity {
 
   onTick() {
     const io = this.game!.io;
+    const shiftIsDown = io.isKeyDown("ShiftLeft") || io.isKeyDown("ShiftRight");
 
     const cart = this.human.cart;
     if (cart) {
       const [rotational, axial] = io.getMovementVector();
 
-      if (io.isKeyDown("ShiftLeft") || io.isKeyDown("ShiftRight")) {
+      if (shiftIsDown) {
         cart.skid();
       }
 
@@ -60,14 +65,12 @@ export class PlayerController extends BaseEntity implements Entity {
         const direction = io.getStick("right");
         // account for dead zone
         if (direction.magnitude > 0.01) {
-          this.human.body.angle = direction.angle;
+          this.human.aim(direction.angle);
         }
       } else {
-        const mousePosition = this.game!.camera.toWorld(io.mousePosition);
-        const mouseDirection = mousePosition.sub(
-          this.human.getPosition()
-        ).angle;
-        this.human.body.angle = mouseDirection;
+        if (walkDirection.magnitude > 0.1) {
+          this.human.aim(walkDirection.angle);
+        }
       }
     }
   }

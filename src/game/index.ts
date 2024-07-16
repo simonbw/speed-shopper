@@ -2,13 +2,14 @@ import { TextureStyle } from "pixi.js";
 import Game from "../core/Game";
 import FPSMeter from "../core/util/FPSMeter";
 import { V } from "../core/Vector";
-import { Cart } from "./Cart";
+import { Cart, isCart } from "./Cart";
 import { GamePreloader } from "./GamePreloader";
 import Wall from "./Wall";
 import { CameraController } from "./CameraController";
 import { Human } from "./Human";
 import { PlayerController } from "./PlayerController";
 import { Floor } from "./Floor";
+import { Shelves } from "./Shelves";
 
 // Do this so we can access the game from the console
 declare global {
@@ -30,27 +31,51 @@ async function main() {
   await preloader.waitTillLoaded();
   preloader.destroy();
 
+  game.entities.addFilter(isCart);
+
   if (process.env.NODE_ENV === "development") {
     const fpsMeter = new FPSMeter();
     fpsMeter.sprite.layerName = "debugHud";
     game.addEntity(fpsMeter);
   }
 
-  const cart = game.addEntity(new Cart(V(5, 3)));
-  const playerHuman = game.addEntity(
+  const player = game.addEntity(
     new Human({ position: V(5, 5), angle: 0, walkSpeed: 5 })
   );
-  game.addEntity(new PlayerController(playerHuman, cart));
-  game.addEntity(new CameraController(game.camera, playerHuman));
+  game.addEntity(new PlayerController(player));
+  game.addEntity(new CameraController(game.camera, player));
 
-  game.addEntities(
-    new Wall([0, 0], [20, 0]),
-    new Wall([20, 0], [20, 20]),
-    new Wall([20, 20], [0, 20]),
-    new Wall([0, 20], [0, 0])
+  game.addEntity(new Cart(V(5, 3)));
+  game.addEntity(new Cart(V(6, 3)));
+  game.addEntity(new Cart(V(7, 3)));
+  game.addEntity(new Cart(V(8, 3)));
+
+  const storeWidth = 40;
+  const storeHeight = 35;
+  game.addEntity(
+    new Floor(V(0, 0), V(storeWidth, storeHeight), "tileFloor14", 0.005)
   );
 
-  game.addEntity(new Floor(V(0, 0), V(20, 20), "tileFloor14", 0.005));
+  game.addEntities(
+    new Wall([0, 0], [storeWidth, 0]),
+    new Wall([storeWidth, 0], [storeWidth, storeHeight]),
+    new Wall([storeWidth, storeHeight], [0, storeHeight]),
+    new Wall([0, storeHeight], [0, 0])
+  );
+
+  game.addEntities(
+    new Shelves(V(10, 10)),
+    new Shelves(V(15, 10)),
+    new Shelves(V(20, 10)),
+    new Shelves(V(25, 10)),
+    new Shelves(V(30, 10)),
+
+    new Shelves(V(10, 25)),
+    new Shelves(V(15, 25)),
+    new Shelves(V(20, 25)),
+    new Shelves(V(25, 25)),
+    new Shelves(V(30, 25))
+  );
 }
 
 window.addEventListener("load", main);

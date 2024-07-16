@@ -15,7 +15,7 @@ const images = {
   wall1: require("./images/wall-1.png"),
   tileFloor14: require("./images/tile-floor-14.jpg"),
   tileFloor13: require("./images/tile-floor-13.jpg"),
-  faviconOld: require("./images/favicon-old.png"),
+  favicon: require("./images/favicon.png"),
   demitriTorso: require("./images/demitri-torso.png"),
   demitriRightHand: require("./images/demitri-right-hand.png"),
   demitriRightArm: require("./images/demitri-right-arm.png"),

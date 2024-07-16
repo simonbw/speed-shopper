@@ -91,6 +91,10 @@ export class Human extends BaseEntity implements Entity {
     this.aimSpring.restAngle = normalizeAngle(offset.angle);
   }
 
+  public aim(angle: number) {
+    this.aimSpring.restAngle = normalizeAngle(angle);
+  }
+
   /** Called every update cycle */
   onTick(dt: number) {
     const distanceMoved = V(this.body.velocity).magnitude * dt;
