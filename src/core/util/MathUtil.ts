@@ -30,11 +30,21 @@ export function lerp(a: number, b: number, t: number = 0.5): number {
   return (1 - t) * a + t * b;
 }
 
+export function lerpV2d(
+  a: [number, number],
+  b: [number, number],
+  t: number = 0.5
+): V2d {
+  const x = lerp(a[0], b[0], t);
+  const y = lerp(a[1], b[1], t);
+  return V(x, y);
+}
+
 export function lerpOrSnap(
   a: number,
   b: number,
   t: number = 0.5,
-  threshold: number = 0.01,
+  threshold: number = 0.01
 ): number {
   if (Math.abs(b - a) < threshold) {
     return b;

@@ -329,8 +329,7 @@ export default class Game {
 
   getScreenFps(): number {
     const duration = this.averageFrameDuration;
-    const fps = Math.round(1.0 / duration);
-    return fps;
+    return Math.round(1.0 / duration);
   }
 
   /** Actually remove all the entities slated for removal from the game. */

@@ -2,28 +2,40 @@ import { Body, Circle } from "p2";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import AimSpring from "../core/physics/AimSpring";
+import { normalizeAngle } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
 import { CartSpring } from "./CartSpring";
 import { CollisionGroups } from "./config/CollisionGroups";
 import { HumanSprite } from "./HumanSprite";
+import { Stride } from "./Stride";
+import { VelocityDisplay } from "./VelocityDisplay";
+import { WalkingForces } from "./WalkingForces";
 import { WalkSoundPlayer } from "./WalkSoundPlayer";
-import { WalkSpring } from "./WalkSpring";
-import { normalizeAngle } from "../core/util/MathUtil";
 
+// Walk spring config
+const PUSH_ACCELERATION = 30;
+const PUSH_SPEED = 30;
+const WALK_ACCELERATION = 25;
+const WALK_SPEED = 7;
+const FRICTION = 0;
+
+// Stride config
 const STEPS_PER_METER = 0.4;
+
+// Other body properties
+export const MAX_ARM_LENGTH = 0.6;
 
 export class Human extends BaseEntity implements Entity {
   body: Body;
   tags = ["human"];
 
   walkSoundPlayer: WalkSoundPlayer;
-  walkSpring: WalkSpring;
+  walkSpring: WalkingForces;
   aimSpring: AimSpring;
 
-  percentThroughStride: number = 0;
-  lastDistanceMoved: number = 0;
   humanSprite: HumanSprite;
+  stride: Stride;
 
   cart: Cart | undefined;
   cartSpring: CartSpring | undefined;
@@ -65,30 +77,33 @@ export class Human extends BaseEntity implements Entity {
       )
     );
 
+    this.stride = this.addChild(new Stride(this, STEPS_PER_METER));
     this.walkSoundPlayer = this.addChild(new WalkSoundPlayer(this));
-    this.walkSpring = this.addChild(new WalkSpring(this.body));
+    this.walkSpring = this.addChild(new WalkingForces(this.body));
     this.aimSpring = new AimSpring(this.body);
 
     this.springs = [this.aimSpring];
+
+    this.addChild(new VelocityDisplay(this.body));
   }
 
   grabCart(cart: Cart) {
     if (!this.cart) {
       this.cart = cart;
-      // this.cartSpring = this.addChild(new CartSpring(this, cart));
+      this.cartSpring = this.addChild(new CartSpring(this, cart));
       // this.walkSpring.enabled = false;
     }
   }
 
   releaseCart() {
     this.cart = undefined;
-    // this.cartSpring?.destroy();
+    this.cartSpring?.destroy();
     // this.walkSpring.enabled = true;
   }
 
-  public aimAt(position: [number, number]) {
-    const offset = this.getPosition().isub(position).imul(-1);
-    this.aimSpring.restAngle = normalizeAngle(offset.angle);
+  public aimAt(position: [number, number], offset: number = 0) {
+    const displacement = this.getPosition().isub(position).imul(-1);
+    this.aimSpring.restAngle = normalizeAngle(displacement.angle + offset);
   }
 
   public aim(angle: number) {
@@ -97,41 +112,34 @@ export class Human extends BaseEntity implements Entity {
 
   /** Called every update cycle */
   onTick(dt: number) {
-    const distanceMoved = V(this.body.velocity).magnitude * dt;
-
+    // Update walk spring
     if (this.cart) {
-      this.walkSpring.acceleration = 8;
-      this.walkSpring.speed = 30;
+      this.walkSpring.maxAcceleration = PUSH_ACCELERATION;
+      this.walkSpring.maxSpeed = PUSH_SPEED;
     } else {
-      this.walkSpring.acceleration = 6;
-      this.walkSpring.speed = 9;
+      this.walkSpring.maxAcceleration = WALK_ACCELERATION;
+      this.walkSpring.maxSpeed = WALK_SPEED;
     }
 
-    const stopThreshold = 0.001;
-    if (distanceMoved > stopThreshold) {
-      const lastPercentThroughStep = this.percentThroughStride;
-      const stepsPerMeter = STEPS_PER_METER;
-      this.percentThroughStride += distanceMoved * stepsPerMeter;
+    // Apply friction
+    const friction = V(this.body.velocity).imul(-1).imul(FRICTION);
+    this.body.applyForce(friction);
 
-      // If we've taken a new step
+    // See if cart is lost
+    if (this.cart) {
+      const [leftHandTarget, rightHandTarget] = this.cart.getHandPositions();
+      const [leftShoulder, rightShoulder] = this.humanSprite
+        .getShoulderPositions()
+        .map((v) => this.localToWorld(v));
+      const leftDistance = leftShoulder.isub(leftHandTarget).magnitude;
+      const rightDistance = rightShoulder.isub(rightHandTarget).magnitude;
+
       if (
-        (this.percentThroughStride > 1 && lastPercentThroughStep < 1) ||
-        (this.percentThroughStride > 2 && lastPercentThroughStep < 2)
+        leftDistance > MAX_ARM_LENGTH * 1.01 &&
+        rightDistance > MAX_ARM_LENGTH * 1.01
       ) {
-        this.walkSoundPlayer.playFootstep();
-      }
-
-      // Wrap around the stride
-      this.percentThroughStride %= 2;
-
-      this.body.angle = V(this.body.velocity).angle;
-    } else {
-      // not moving
-      this.percentThroughStride = 0;
-
-      // If we've just stopped moving
-      if (this.lastDistanceMoved > stopThreshold) {
-        this.walkSoundPlayer.playFootstep();
+        this.releaseCart();
+        console.log("Couldn't hang on");
       }
     }
   }

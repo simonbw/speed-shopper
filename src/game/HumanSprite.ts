@@ -5,7 +5,7 @@ import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { V, V2d } from "../core/Vector";
 import { polarToVec } from "../core/util/MathUtil";
 import { ImageName } from "../../resources/resources";
-import { Human } from "./Human";
+import { Human, MAX_ARM_LENGTH } from "./Human";
 
 export interface HumanTextures {
   head: ImageName;
@@ -141,7 +141,15 @@ export class HumanSprite extends BaseEntity implements Entity {
       const [leftHandPosition, rightHandPosition] = cart.getHandPositions();
       const localLeft = this.human.worldToLocal(leftHandPosition);
       const localRight = this.human.worldToLocal(rightHandPosition);
-      return [localLeft, localRight];
+
+      const [leftShoulder, rightShoulder] = this.getShoulderPositions();
+      const leftFromShoulder = localLeft.sub(leftShoulder);
+      const rightFromShoulder = localRight.sub(rightShoulder);
+
+      return [
+        leftShoulder.iadd(leftFromShoulder.ilimit(MAX_ARM_LENGTH)),
+        rightShoulder.iadd(rightFromShoulder.ilimit(MAX_ARM_LENGTH)),
+      ];
     } else {
       return this.getShoulderPositions();
     }

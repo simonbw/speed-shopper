@@ -20,6 +20,10 @@ export const LAYERS = {
 
   // DEFAULT: The main stuff
   main: new LayerInfo(),
+
+  // debugWorld
+  debugWorld: new LayerInfo(),
+
   // Stuff not in the world
   hud: new LayerInfo({ paralax: V(0, 0) }),
   // Stuff on the absolute top that's just used for debugging
