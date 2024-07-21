@@ -5,7 +5,7 @@ import { V, V2d } from "../core/Vector";
 import { Human } from "./Human";
 import { isMerchandise, Merchandise } from "./Merchandise";
 
-const PICKUP_RANGE = 0.2;
+const PICKUP_RANGE = 0.3;
 export const ARM_LENGTH = 0.6;
 
 export class HumanArm extends BaseEntity {
