@@ -2,7 +2,7 @@ import { Body, Circle } from "p2";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import AimSpring from "../core/physics/AimSpring";
-import { normalizeAngle } from "../core/util/MathUtil";
+import { normalizeAngle, polarToVec } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
 import { CartSpring } from "./CartSpring";
@@ -12,6 +12,7 @@ import { Stride } from "./Stride";
 import { VelocityDisplay } from "./VelocityDisplay";
 import { WalkingForces } from "./WalkingForces";
 import { WalkSoundPlayer } from "./WalkSoundPlayer";
+import { HumanArm, ARM_LENGTH } from "./HumanArm";
 
 // Walk spring config
 const PUSH_ACCELERATION = 30;
@@ -20,11 +21,10 @@ const WALK_ACCELERATION = 25;
 const WALK_SPEED = 7;
 const FRICTION = 0;
 
-// Stride config
-const STEPS_PER_METER = 0.4;
+const CART_SLIP_THRESHOLD = 0.1;
 
-// Other body properties
-export const MAX_ARM_LENGTH = 0.6;
+// Stride config
+const STEPS_PER_METER = 0.5;
 
 export class Human extends BaseEntity implements Entity {
   body: Body;
@@ -36,6 +36,8 @@ export class Human extends BaseEntity implements Entity {
 
   humanSprite: HumanSprite;
   stride: Stride;
+  leftArm: HumanArm;
+  rightArm: HumanArm;
 
   cart: Cart | undefined;
   cartSpring: CartSpring | undefined;
@@ -85,6 +87,12 @@ export class Human extends BaseEntity implements Entity {
     this.springs = [this.aimSpring];
 
     this.addChild(new VelocityDisplay(this.body));
+    this.leftArm = this.addChild(
+      new HumanArm(this, V(0, -(radius * 0.8)), "left")
+    );
+    this.rightArm = this.addChild(
+      new HumanArm(this, V(0, radius * 0.8), "right")
+    );
   }
 
   grabCart(cart: Cart) {
@@ -127,16 +135,21 @@ export class Human extends BaseEntity implements Entity {
 
     // See if cart is lost
     if (this.cart) {
-      const [leftHandTarget, rightHandTarget] = this.cart.getHandPositions();
-      const [leftShoulder, rightShoulder] = this.humanSprite
-        .getShoulderPositions()
-        .map((v) => this.localToWorld(v));
-      const leftDistance = leftShoulder.isub(leftHandTarget).magnitude;
-      const rightDistance = rightShoulder.isub(rightHandTarget).magnitude;
+      const [leftHandTarget, rightHandTarget] =
+        this.cart.getWorldHandPositions();
+      const leftHandWorld = this.localToWorld(
+        this.leftArm.getHandLocalPosition()
+      );
+      const rightHandWorld = this.localToWorld(
+        this.rightArm.getHandLocalPosition()
+      );
+
+      const leftDistance = leftHandWorld.isub(leftHandTarget).magnitude;
+      const rightDistance = rightHandWorld.isub(rightHandTarget).magnitude;
 
       if (
-        leftDistance > MAX_ARM_LENGTH * 1.01 &&
-        rightDistance > MAX_ARM_LENGTH * 1.01
+        leftDistance > CART_SLIP_THRESHOLD &&
+        rightDistance > CART_SLIP_THRESHOLD
       ) {
         this.releaseCart();
         console.log("Couldn't hang on");

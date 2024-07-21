@@ -16,9 +16,10 @@ export class Stride extends BaseEntity implements Entity {
   }
 
   onTick(dt: number) {
-    const distanceMoved = V(this.human.body.velocity).magnitude * dt;
+    const speed = V(this.human.body.velocity).magnitude;
+    const distanceMoved = speed * dt;
 
-    const stopThreshold = 0.001;
+    const stopThreshold = 0.0000001;
     if (distanceMoved > stopThreshold) {
       const lastPercentThroughStep = this.percentThroughStride;
       this.percentThroughStride += distanceMoved * this.stepsPerMeter;

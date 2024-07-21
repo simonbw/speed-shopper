@@ -25,6 +25,7 @@ export class WalkSoundPlayer extends BaseEntity {
     this.addChild(
       new PositionalSound(soundName, this.human.getPosition(), {
         speed: rUniform(0.9, 1.1),
+        gain: 0.4,
       })
     );
   }

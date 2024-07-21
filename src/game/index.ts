@@ -10,6 +10,7 @@ import { Human } from "./Human";
 import { PlayerController } from "./PlayerController";
 import { Floor } from "./Floor";
 import { Shelves } from "./Shelves";
+import { isMerchandise, Merchandise } from "./Merchandise";
 
 // Do this so we can access the game from the console
 declare global {
@@ -32,6 +33,7 @@ async function main() {
   preloader.destroy();
 
   game.entities.addFilter(isCart);
+  game.entities.addFilter(isMerchandise);
 
   if (process.env.NODE_ENV === "development") {
     const fpsMeter = new FPSMeter();
@@ -75,6 +77,22 @@ async function main() {
     new Shelves(V(20, 25)),
     new Shelves(V(25, 25)),
     new Shelves(V(30, 25))
+  );
+
+  game.addEntities(
+    new Merchandise(V(7, 10)),
+    new Merchandise(V(7, 12)),
+    new Merchandise(V(7, 14)),
+    new Merchandise(V(7, 16)),
+    new Merchandise(V(7, 18)),
+    new Merchandise(V(7, 20)),
+    new Merchandise(V(7, 22)),
+    new Merchandise(V(7, 24)),
+    new Merchandise(V(7, 26)),
+    new Merchandise(V(7, 28)),
+    new Merchandise(V(7, 30)),
+
+    new Merchandise(V(31, 10))
   );
 }
 

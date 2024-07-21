@@ -3,9 +3,10 @@ import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { V, V2d } from "../core/Vector";
-import { polarToVec } from "../core/util/MathUtil";
+import { lerpV2d, polarToVec } from "../core/util/MathUtil";
 import { ImageName } from "../../resources/resources";
-import { Human, MAX_ARM_LENGTH } from "./Human";
+import { Human } from "./Human";
+import { ARM_LENGTH } from "./HumanArm";
 
 export interface HumanTextures {
   head: ImageName;
@@ -84,8 +85,11 @@ export class HumanSprite extends BaseEntity implements Entity {
     this.torsoSprite.position.set(...stanceOffset);
     this.headSprite.position.set(...stanceOffset);
 
-    const [leftShoulderPos, rightShoulderPos] = this.getShoulderPositions();
-    const [leftHandPos, rightHandPos] = this.getHandPositions();
+    const leftShoulderPos = this.human.leftArm.shoulderPosition;
+    const rightShoulderPos = this.human.rightArm.shoulderPosition;
+
+    const leftHandPos = this.human.leftArm.getHandLocalPosition();
+    const rightHandPos = this.human.rightArm.getHandLocalPosition();
 
     const leftArmPos = leftShoulderPos.lerp(leftHandPos, 0.5);
     const rightArmPos = rightShoulderPos.lerp(rightHandPos, 0.5);
@@ -106,52 +110,22 @@ export class HumanSprite extends BaseEntity implements Entity {
   }
 
   // Override me!
-  getPosition() {
-    return this.human.getPosition();
-  }
-
-  // Override me!
-  getAngle() {
-    return this.human.body.angle;
-  }
-
-  // Override me!
   getStanceAngle(): number {
     return 0;
   }
 
   // Override me!
-  getStanceOffset() {
+  getStanceOffset(): V2d {
     return V(0, 0);
   }
 
-  getShoulderPositions(): [V2d, V2d] {
-    const stanceAngle = this.getStanceAngle();
-    const offset = this.getStanceOffset();
-    const r = this.radius - this.armThickness / 2;
-    return [
-      polarToVec(stanceAngle - Math.PI / 2, r).iadd(offset),
-      polarToVec(stanceAngle + Math.PI / 2, r).iadd(offset),
-    ];
+  // Override me!
+  getAngle(): number {
+    return this.human.body.angle;
   }
 
-  getHandPositions(): [V2d, V2d] {
-    if (this.human.cart) {
-      const cart = this.human.cart;
-      const [leftHandPosition, rightHandPosition] = cart.getHandPositions();
-      const localLeft = this.human.worldToLocal(leftHandPosition);
-      const localRight = this.human.worldToLocal(rightHandPosition);
-
-      const [leftShoulder, rightShoulder] = this.getShoulderPositions();
-      const leftFromShoulder = localLeft.sub(leftShoulder);
-      const rightFromShoulder = localRight.sub(rightShoulder);
-
-      return [
-        leftShoulder.iadd(leftFromShoulder.ilimit(MAX_ARM_LENGTH)),
-        rightShoulder.iadd(rightFromShoulder.ilimit(MAX_ARM_LENGTH)),
-      ];
-    } else {
-      return this.getShoulderPositions();
-    }
+  // Override me!
+  getPosition(): V2d {
+    return this.human.getPosition();
   }
 }

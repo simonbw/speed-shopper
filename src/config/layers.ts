@@ -18,6 +18,9 @@ export const LAYERS = {
 
   player: new LayerInfo(),
 
+  // Merchandise
+  merchandise: new LayerInfo(),
+
   // DEFAULT: The main stuff
   main: new LayerInfo(),
 

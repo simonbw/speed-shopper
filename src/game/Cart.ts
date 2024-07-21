@@ -68,7 +68,7 @@ export class Cart extends BaseEntity implements Entity {
     return [leftHandPosition, rightHandPosition];
   }
 
-  public getHandPositions() {
+  public getWorldHandPositions() {
     const [leftLocal, rightLocal] = this.getLocalHandPositions();
     return [this.localToWorld(leftLocal), this.localToWorld(rightLocal)];
   }

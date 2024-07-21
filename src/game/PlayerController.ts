@@ -35,6 +35,12 @@ export class PlayerController extends BaseEntity implements Entity {
     const shiftIsDown = io.isKeyDown("ShiftLeft") || io.isKeyDown("ShiftRight");
 
     const cart = this.human.cart;
+
+    this.human.leftArm.extensionTarget =
+      io.isKeyDown("KeyQ") || io.isKeyDown("KeyJ") ? 1 : 0;
+    this.human.rightArm.extensionTarget =
+      io.isKeyDown("KeyE") || io.isKeyDown("KeyK") ? 1 : 0;
+
     if (cart) {
       const [rotational, axial] = io.getMovementVector();
 
