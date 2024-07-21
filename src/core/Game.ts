@@ -187,6 +187,7 @@ export default class Game {
       entity.onAdd({ game: this });
     }
 
+    // If the entity was destroyed during it's onAdd, we shouldn't add it
     if (!entity.game) {
       return entity;
     }

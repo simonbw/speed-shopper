@@ -1,4 +1,4 @@
-import { Body, Convex } from "p2";
+import { Body, Convex, Line, vec2 } from "p2";
 import { Sprite } from "pixi.js";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
@@ -8,6 +8,9 @@ import { CartWheel } from "./CartWheel";
 import { SoundName } from "../../resources/resources";
 import { PositionalSound } from "../core/sound/PositionalSound";
 import { choose, rUniform } from "../core/util/Random";
+import { Merchandise } from "./Merchandise";
+import { lineFromPoints } from "../core/util/PhysicsUtils";
+import { CollisionGroups } from "./config/CollisionGroups";
 
 const PUSH_STRENGTH = 7.0;
 const PUSH_TORQUE = 0.15;
@@ -23,6 +26,8 @@ export class Cart extends BaseEntity implements Entity {
   body: Body;
 
   wheels: CartWheel[];
+
+  merchandises: Merchandise[] = [];
 
   constructor(position: [number, number]) {
     super();
@@ -41,16 +46,33 @@ export class Cart extends BaseEntity implements Entity {
 
     const fw = 0.26;
     const bw = 0.32;
+    const h = 0.5;
+
+    const bl = V([-bw, 0.5]);
+    const fl = V([-fw, -0.5]);
+    const fr = V([fw, -0.5]);
+    const br = V([bw, 0.5]);
 
     const shape = new Convex({
-      vertices: [
-        [-bw, 0.5],
-        [-fw, -0.5],
-        [fw, -0.5],
-        [bw, 0.5],
-      ],
+      vertices: [bl.clone(), fl.clone(), fr.clone(), br.clone()],
     });
+    shape.collisionGroup = CollisionGroups.CartExterior;
+    shape.collisionMask = CollisionGroups.All;
     this.body.addShape(shape);
+
+    // The inverse of mainShape for keeping merchandise in the cart
+    const innerShapes = [
+      lineFromPoints(fl, bl),
+      lineFromPoints(fr, br),
+      lineFromPoints(fl, fr),
+      lineFromPoints(bl, br),
+    ];
+
+    for (const innerShape of innerShapes) {
+      innerShape.collisionGroup = CollisionGroups.CartInterior;
+      innerShape.collisionMask = CollisionGroups.CartedMerchandise;
+      this.body.addShape(innerShape, innerShape.position, innerShape.angle);
+    }
 
     const frontLeft = new CartWheel(this, V(-(fw - 0.15), -0.28), false);
     const frontRight = new CartWheel(this, V(fw - 0.15, -0.28), false);
@@ -108,6 +130,10 @@ export class Cart extends BaseEntity implements Entity {
         speed: rUniform(0.9, 1.1),
       })
     );
+  }
+
+  addMerchandise(merchandise: Merchandise) {
+    this.merchandises.push(merchandise);
   }
 }
 

@@ -54,13 +54,19 @@ export class HumanArm extends BaseEntity {
       this.merchandise.body.position = this.getHandWorldPosition();
 
       if (this._extension === 0) {
-        // Keep merchandise momentumd
-        this.human.body.getVelocityAtPoint(
-          this.merchandise.body.velocity,
-          this.merchandise.getPosition().isub(this.human.getPosition())
-        );
-        this.merchandise.drop();
-        this.merchandise = undefined;
+        if (this.human.cart) {
+          this.merchandise.putInCart(this.human.cart);
+          this.human.cart.addMerchandise(this.merchandise);
+          this.merchandise = undefined;
+        } else {
+          // Keep merchandise momentum
+          const merchVelocity = this.human.body.getVelocityAtPoint(
+            V(),
+            this.merchandise.getPosition().isub(this.human.getPosition())
+          );
+          this.merchandise.drop(merchVelocity);
+          this.merchandise = undefined;
+        }
       }
     } else {
       if (this._extension > 0) {

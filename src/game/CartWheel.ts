@@ -46,8 +46,7 @@ export class CartWheel extends BaseEntity implements Entity {
     });
 
     const shape = new Box({ width: 0.03, height: 0.1 });
-    shape.collisionGroup = 0;
-    shape.collisionMask = 0;
+    shape.collisionResponse = false;
     this.body.addShape(shape);
 
     // Keep the wheel attached to the cart

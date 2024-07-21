@@ -61,6 +61,7 @@ export class Human extends BaseEntity implements Entity {
     const radius = 0.3; // meters
 
     const shape = new Circle({ radius: radius * 0.6 });
+    shape.collisionGroup = CollisionGroups.Player;
     shape.collisionMask = CollisionGroups.All;
     this.body.addShape(shape);
 

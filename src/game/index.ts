@@ -23,7 +23,7 @@ async function main() {
   // Make the pixel art crisp
   TextureStyle.defaultOptions.scaleMode = "linear";
 
-  const game = new Game({ tickIterations: 100 });
+  const game = new Game({ tickIterations: 20 });
   await game.init({ rendererOptions: { backgroundColor: 0x444454 } });
   // Make the game accessible from the console
   window.DEBUG = { game };

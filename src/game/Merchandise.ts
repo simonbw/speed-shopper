@@ -1,19 +1,24 @@
+import p2, { Body, vec2 } from "p2";
 import { Sprite } from "pixi.js";
+import { V } from "../core/Vector";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
-import { Body } from "p2";
-import { V } from "../core/Vector";
-import p2 from "p2";
+import { Cart } from "./Cart";
 import { HumanArm } from "./HumanArm";
+import { CollisionGroups } from "./config/CollisionGroups";
 
-const FRICTION = 0.3;
+const DROPPED_FRICTION = 2.0;
+const CARTED_FRICTION = 10.0;
+
+type MerchandiseState = "pickedUp" | "dropped" | "carted";
 
 export class Merchandise extends BaseEntity implements Entity {
   sprite: Sprite & GameSprite;
   body: Body;
 
-  state: "pickedUp" | "dropped" = "dropped";
+  state: MerchandiseState = "dropped";
+  cart: Cart | undefined;
 
   constructor(position: [number, number]) {
     super();
@@ -31,16 +36,29 @@ export class Merchandise extends BaseEntity implements Entity {
       mass: 0.1,
     });
 
-    this.body.addShape(
-      new p2.Circle({
-        radius: size / 2,
-      })
-    );
+    const shape = new p2.Circle({
+      radius: size / 2,
+    });
+    shape.collisionGroup = CollisionGroups.FreeMerchandise;
+    shape.collisionMask = CollisionGroups.All;
+    this.body.addShape(shape);
   }
 
   onTick() {
     if (this.state === "dropped") {
-      const friction = V(this.body.velocity).imul(-FRICTION);
+      const friction = V(this.body.velocity)
+        .imul(-DROPPED_FRICTION)
+        .imul(this.body.mass);
+      this.body.applyForce(friction);
+    } else if (this.state === "carted") {
+      const cart = this.cart!;
+      // Apply cart friction
+      const positionInCart = this.getPosition().isub(cart.body.position);
+      const friction = V(cart.body.getVelocityAtPoint(V(), positionInCart))
+        .isub(this.body.velocity)
+        .imul(CARTED_FRICTION)
+        .imul(this.body.mass);
+
       this.body.applyForce(friction);
     }
   }
@@ -56,9 +74,29 @@ export class Merchandise extends BaseEntity implements Entity {
     this.state = "pickedUp";
   }
 
-  drop() {
+  drop(velocity: [number, number]) {
     this.body.collisionResponse = true;
     this.state = "dropped";
+    vec2.copy(this.body.velocity, velocity);
+  }
+
+  putInCart(cart: Cart) {
+    this.state = "carted";
+    this.cart = cart;
+    this.body.collisionResponse = true;
+    this.body.position = V(cart.body.position);
+
+    for (const shape of this.body.shapes) {
+      shape.collisionGroup = CollisionGroups.CartedMerchandise;
+      shape.collisionMask =
+        CollisionGroups.CartInterior | CollisionGroups.CartedMerchandise;
+    }
+  }
+
+  onBeginContact({ other }: { other?: Entity }) {
+    if (this.state === "carted" && other?.tags.includes("cart")) {
+      console.log("Merchandise hit cart!");
+    }
   }
 }
 

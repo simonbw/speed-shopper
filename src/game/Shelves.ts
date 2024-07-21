@@ -4,6 +4,7 @@ import Entity from "../core/entity/Entity";
 import { V, V2d } from "../core/Vector";
 import { BlurFilter, Graphics } from "pixi.js";
 import { GameSprite } from "../core/entity/GameSprite";
+import { CollisionGroups } from "./config/CollisionGroups";
 
 const FRICTION = 100;
 const ANGULAR_FRICTION = 1000;
@@ -26,6 +27,8 @@ export class Shelves extends BaseEntity implements Entity {
     const height = 10;
 
     const shape = new Box({ width, height });
+    shape.collisionGroup = CollisionGroups.Environment;
+    shape.collisionMask = CollisionGroups.All;
     this.body.addShape(shape);
 
     this.sprite = new Graphics({ position })
