@@ -13,6 +13,7 @@ export const CollisionGroupsWithoutAll = {
   CartInterior: makeGroup(),
   FreeMerchandise: makeGroup(),
   CartedMerchandise: makeGroup(),
+  Checkout: makeGroup(),
 } as const;
 
 export type CollisionGroupName = keyof typeof CollisionGroupsWithoutAll | "All";

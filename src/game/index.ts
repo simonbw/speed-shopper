@@ -11,6 +11,8 @@ import { PlayerController } from "./PlayerController";
 import { Floor } from "./Floor";
 import { Shelves } from "./Shelves";
 import { isMerchandise, Merchandise } from "./Merchandise";
+import { Checkout } from "./Checkout";
+import { ShoppingList } from "./ShoppingList";
 
 // Do this so we can access the game from the console
 declare global {
@@ -94,6 +96,9 @@ async function main() {
 
     new Merchandise(V(31, 10))
   );
+
+  game.addEntity(new Checkout(V(35, 3)));
+  game.addEntity(new ShoppingList());
 }
 
 window.addEventListener("load", main);

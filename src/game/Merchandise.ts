@@ -18,12 +18,16 @@ const SPRITE_STEP_SIZE = 100; // m / s
 
 type MerchandiseState = "pickedUp" | "dropped" | "carted";
 
+export type MerchandiseType = "orange";
+
 export class Merchandise extends BaseEntity implements Entity {
   sprite!: Sprite & GameSprite;
   body!: Body;
 
   state: MerchandiseState = "dropped";
   cart: Cart | undefined;
+
+  merchandiseType: MerchandiseType = "orange";
 
   constructor(position: [number, number]) {
     super(RESOURCES.entityDefs.orange);
@@ -100,7 +104,9 @@ export class Merchandise extends BaseEntity implements Entity {
     for (const shape of this.body.shapes) {
       shape.collisionGroup = CollisionGroups.CartedMerchandise;
       shape.collisionMask =
-        CollisionGroups.CartInterior | CollisionGroups.CartedMerchandise;
+        CollisionGroups.CartInterior |
+        CollisionGroups.CartedMerchandise |
+        CollisionGroups.Checkout;
     }
   }
 
@@ -111,6 +117,6 @@ export class Merchandise extends BaseEntity implements Entity {
   }
 }
 
-export function isMerchandise(entity: Entity): entity is Merchandise {
-  return entity.tags.includes("merchandise");
+export function isMerchandise(entity?: Entity): entity is Merchandise {
+  return entity !== undefined && entity.tags.includes("merchandise");
 }
