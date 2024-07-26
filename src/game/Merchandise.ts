@@ -11,7 +11,9 @@ import { RESOURCES } from "../../resources/resources";
 import { stepToward } from "../core/util/MathUtil";
 
 const DROPPED_FRICTION = 2.0;
+const DROPPED_ANGULAR_FRICTION = 0.2;
 const CARTED_FRICTION = 10.0;
+const CARTED_ANGULAR_FRICTION = 0.2;
 const SPRITE_STEP_SIZE = 100; // m / s
 
 type MerchandiseState = "pickedUp" | "dropped" | "carted";
@@ -37,6 +39,10 @@ export class Merchandise extends BaseEntity implements Entity {
         .imul(-DROPPED_FRICTION)
         .imul(this.body.mass);
       this.body.applyForce(friction);
+      this.body.angularForce +=
+        -this.body.angularVelocity *
+        this.body.inertia *
+        DROPPED_ANGULAR_FRICTION;
     } else if (this.state === "carted") {
       const cart = this.cart!;
       // Apply cart friction
@@ -47,6 +53,10 @@ export class Merchandise extends BaseEntity implements Entity {
         .imul(this.body.mass);
 
       this.body.applyForce(friction);
+      this.body.angularForce +=
+        -this.body.angularVelocity *
+        this.body.inertia *
+        CARTED_ANGULAR_FRICTION;
 
       // equal and opposite force on cart
       cart.body.applyForce(friction.imul(-1), positionInCart);
@@ -85,6 +95,7 @@ export class Merchandise extends BaseEntity implements Entity {
     this.cart = cart;
     this.body.collisionResponse = true;
     this.body.position = V(cart.body.position);
+    this.body.velocity = V(cart.body.velocity);
 
     for (const shape of this.body.shapes) {
       shape.collisionGroup = CollisionGroups.CartedMerchandise;
