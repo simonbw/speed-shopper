@@ -5,8 +5,10 @@ import { V, V2d } from "../core/Vector";
 import { Human } from "./Human";
 import { isMerchandise, Merchandise } from "./Merchandise";
 
-const PICKUP_RANGE = 0.3;
-export const ARM_LENGTH = 0.6;
+const MAGNET_RANGE = 0.5; // meters
+const MAGNET_STRENGTH = 1; // N
+const PICKUP_RANGE = 0.1; // meters
+export const ARM_LENGTH = 0.6; // meters
 
 export class HumanArm extends BaseEntity {
   extensionTarget: number = 0;
@@ -49,7 +51,7 @@ export class HumanArm extends BaseEntity {
     );
 
     // Find nearby merchandise
-    const armPosition = this.getHandWorldPosition();
+    const handPosition = this.getHandWorldPosition();
     if (this.merchandise) {
       this.merchandise.body.position = this.getHandWorldPosition();
 
@@ -72,12 +74,17 @@ export class HumanArm extends BaseEntity {
       if (this._extension > 0) {
         const merchandises = game.entities.getByFilter(isMerchandise);
         for (const merchandise of merchandises) {
-          if (
-            merchandise.state === "dropped" &&
-            armPosition.sub(merchandise.body.position).magnitude < PICKUP_RANGE
-          ) {
-            merchandise.pickup(this);
-            this.merchandise = merchandise;
+          if (merchandise.state === "dropped") {
+            const displacement = handPosition.sub(merchandise.body.position);
+            const distance = displacement.magnitude;
+            if (distance < PICKUP_RANGE) {
+              merchandise.pickup(this);
+              this.merchandise = merchandise;
+            } else if (distance < MAGNET_RANGE) {
+              const strength = MAGNET_STRENGTH / distance ** 2;
+              const gravity = displacement.normalize().imul(strength);
+              merchandise.body.applyForce(gravity);
+            }
           }
         }
       }

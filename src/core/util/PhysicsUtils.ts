@@ -1,5 +1,6 @@
-import { Line } from "p2";
-import { V2d } from "../Vector";
+import { Box, Circle, Convex, Line, Shape } from "p2";
+import { ShapeDef } from "../EntityDef";
+import { V, V2d } from "../Vector";
 
 export function lineFromPoints(p1: V2d, p2: V2d): Line {
   const vector = p2.sub(p1);
@@ -10,4 +11,37 @@ export function lineFromPoints(p1: V2d, p2: V2d): Line {
     angle: vector.angle,
     length: vector.magnitude,
   });
+}
+
+export function shapeFromDef(shapeDef: ShapeDef): Shape {
+  const shape = baseShapeFromDef(shapeDef);
+  shape.collisionGroup = shapeDef.collisionGroup;
+  shape.collisionMask = shapeDef.collisionMask;
+  return shape;
+}
+
+function baseShapeFromDef(shapeDef: ShapeDef): Shape {
+  switch (shapeDef.type) {
+    case "line": {
+      return lineFromPoints(V(shapeDef.start), V(shapeDef.end));
+    }
+    case "circle": {
+      return new Circle({
+        radius: shapeDef.radius,
+        position: V(shapeDef.center),
+        angle: 0,
+      });
+    }
+    case "box": {
+      return new Box({
+        width: shapeDef.size[0],
+        height: shapeDef.size[1],
+        position: V(shapeDef.center),
+        angle: shapeDef.angle,
+      });
+    }
+    case "convex": {
+      return new Convex({ vertices: [...shapeDef.vertices] });
+    }
+  }
 }

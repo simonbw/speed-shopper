@@ -1,9 +1,11 @@
-import p2, { Constraint, Spring } from "p2";
+import p2, { Body, Constraint, Spring } from "p2";
 import Game from "../Game";
 import { V, V2d } from "../Vector";
 import { clamp } from "../util/MathUtil";
 import Entity from "./Entity";
-import { GameSprite } from "./GameSprite";
+import { GameSprite, loadGameSprite, spriteFromDef } from "./GameSprite";
+import { EntityDef } from "../EntityDef";
+import { lineFromPoints, shapeFromDef } from "../util/PhysicsUtils";
 
 /**
  * Base class for lots of stuff in the game.
@@ -22,6 +24,36 @@ export default abstract class BaseEntity implements Entity {
   tags: string[] = [];
   sprite?: GameSprite;
   sprites?: GameSprite[];
+
+  constructor(entityDef?: EntityDef) {
+    if (entityDef) {
+      this.loadFromDef(entityDef);
+    }
+  }
+
+  loadFromDef(def: EntityDef): void {
+    if (this.game) {
+      throw new Error(
+        "Can't load from def after entity has been added to game."
+      );
+    }
+
+    if (def.sprites) {
+      if (def.sprites.length === 1) {
+        this.sprite = spriteFromDef(def.sprites[0]);
+      } else {
+        this.sprites = def.sprites.map((spriteDef) => spriteFromDef(spriteDef));
+      }
+    }
+
+    if (def.body) {
+      this.body = new Body({ mass: def.body.mass });
+      for (const shapeDef of def.body.shapes) {
+        const shape = shapeFromDef(shapeDef);
+        this.body.addShape(shape, shape.position, shape.angle);
+      }
+    }
+  }
 
   /** Convert local coordinates to world coordinates. Requires a body */
   localToWorld(localPoint: [number, number]): V2d {

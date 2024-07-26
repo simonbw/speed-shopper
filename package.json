@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "A game where you shop quickly",
   "scripts": {
-    "start": "rm -rf .parcel-cache && concurrently -n assets,server \"npm run watch-manifest\" \"npm run dev-server\"",
+    "start": "concurrently -n assets,server \"npm run watch-manifest\" \"npm run dev-server\"",
     "dev-server": "parcel src/index.html",
-    "watch-manifest": "./bin/generate-asset-types.js -d ./resources watch",
+    "watch-manifest": "tsx ./bin/generate-asset-types.ts -d ./resources watch",
     "build": "parcel build src/index.html",
     "tsc": "tsc --noEmit",
     "tsc-watch": "tsc --noEmit --watch",
     "prettier": "prettier --write src",
-    "generate-manifest": "./bin/generate-asset-types.js -d ./resources"
+    "generate-manifest": "tsx ./bin/generate-asset-types.ts -d ./resources",
+    "entity-studio": "parcel src/core/entity-studio/entity-studio.html -p 1235",
+    "clean": "rm -rf .parcel-cache; rm -rf dist"
   },
   "repository": {
     "type": "git",
@@ -22,25 +24,29 @@
   "dependencies": {
     "@parcel/macros": "^2.12.0",
     "@parcel/resolver-glob": "^2.12.0",
+    "@pixi/react": "^7.1.2",
     "@types/node": "^20.14.10",
     "@types/p2": "^0.7.45",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/yargs": "^17.0.32",
-    "camelcase": "^8.0.0",
     "chokidar": "^3.6.0",
-    "concurrently": "^8.2.2",
     "glob": "^10.4.3",
     "p2": "^0.7.1",
     "parcel": "^2.12.0",
     "pixi-filters": "^6.0.4",
     "pixi.js": "^8.2.2",
-    "prettier": "^3.3.2",
-    "process": "^0.11.10",
+    "prettier": "^3.3.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.3",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "devDependencies": {
+    "@picocss/pico": "^2.0.6",
+    "@types/yargs": "^17.0.32",
+    "camelcase": "^8.0.0",
+    "concurrently": "^8.2.2",
+    "process": "^0.11.10",
     "yargs": "^17.7.2"
   }
 }

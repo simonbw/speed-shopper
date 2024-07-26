@@ -7,41 +7,28 @@ import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { Cart } from "./Cart";
 import { HumanArm } from "./HumanArm";
 import { CollisionGroups } from "./config/CollisionGroups";
+import { RESOURCES } from "../../resources/resources";
+import { stepToward } from "../core/util/MathUtil";
 
 const DROPPED_FRICTION = 2.0;
 const CARTED_FRICTION = 10.0;
+const SPRITE_STEP_SIZE = 100; // m / s
 
 type MerchandiseState = "pickedUp" | "dropped" | "carted";
 
 export class Merchandise extends BaseEntity implements Entity {
-  sprite: Sprite & GameSprite;
-  body: Body;
+  sprite!: Sprite & GameSprite;
+  body!: Body;
 
   state: MerchandiseState = "dropped";
   cart: Cart | undefined;
 
   constructor(position: [number, number]) {
-    super();
+    super(RESOURCES.entityDefs.orange);
     this.tags.push("merchandise");
 
-    const size = 0.12;
-
-    this.sprite = loadGameSprite("orange", "merchandise");
-    this.sprite.anchor.set(0.5);
-    this.sprite.setSize(size);
-
-    this.body = new Body({
-      type: Body.DYNAMIC,
-      position: V(position),
-      mass: 0.1,
-    });
-
-    const shape = new p2.Circle({
-      radius: size / 2,
-    });
-    shape.collisionGroup = CollisionGroups.FreeMerchandise;
-    shape.collisionMask = CollisionGroups.All;
-    this.body.addShape(shape);
+    this.body.position = V(position);
+    this.sprite.position.set(...position);
   }
 
   onTick() {
@@ -60,11 +47,24 @@ export class Merchandise extends BaseEntity implements Entity {
         .imul(this.body.mass);
 
       this.body.applyForce(friction);
+
+      // equal and opposite force on cart
+      cart.body.applyForce(friction.imul(-1), positionInCart);
     }
   }
 
-  onRender() {
-    this.sprite.position.set(...this.body.position);
+  onRender(dt: number) {
+    const stepSize = SPRITE_STEP_SIZE * dt;
+    this.sprite.position.x = stepToward(
+      this.sprite.position.x,
+      this.body.position[0],
+      stepSize
+    );
+    this.sprite.position.y = stepToward(
+      this.sprite.position.y,
+      this.body.position[1],
+      stepSize
+    );
     this.sprite.rotation = this.body.angle;
   }
 

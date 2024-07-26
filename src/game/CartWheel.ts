@@ -12,8 +12,8 @@ import { SkidMark } from "./SkidMark";
 const SWIVEL_RADIUS = 0.04;
 
 // Linear and angular friction coefficients
-const ROLLING_FRICTION = 0.3;
-const SKIDDING_FRICTION = 0.8;
+const ROLLING_FRICTION = 0.5;
+const SKIDDING_FRICTION = 0.9;
 const ANGULAR_FRICTION = 0.00001;
 
 // Point at which the wheel starts skidding
@@ -26,9 +26,12 @@ export class CartWheel extends BaseEntity implements Entity {
   body: Body;
 
   skidding: boolean = false;
+  cart: Cart;
 
   constructor(cart: Cart, positionOnCart: V2d, fixed: boolean) {
     super();
+
+    this.cart = cart;
 
     this.sprite = loadGameSprite("cartWheel", "wheels");
     this.sprite.anchor.set(0.5, 0.5);
@@ -67,11 +70,16 @@ export class CartWheel extends BaseEntity implements Entity {
     const forward = polarToVec(this.body.angle + Math.PI / 2, 1);
     const normal = forward.rotate90cw();
     const velocity = V(this.body.velocity);
+    const weight = this.cart.getWeight();
 
     const normalAmount = velocity.dot(normal);
-    const tractionForce = normal.mul(-normalAmount).imul(TRACTION_COEFFICIENT);
+    const tractionForce = normal
+      .mul(-normalAmount)
+      .imul(TRACTION_COEFFICIENT)
+      .imul(weight);
 
-    const maxTraction = this.skidding ? MAX_TRACTION_SKIDDING : MAX_TRACTION;
+    const maxTraction =
+      (this.skidding ? MAX_TRACTION_SKIDDING : MAX_TRACTION) * weight;
     if (tractionForce.magnitude > maxTraction) {
       this.skidding = true;
       tractionForce.magnitude = maxTraction;

@@ -31,7 +31,7 @@ export const LAYERS = {
   hud: new LayerInfo({ paralax: V(0, 0) }),
   // Stuff on the absolute top that's just used for debugging
   debugHud: new LayerInfo({ paralax: V(0, 0) }),
-} satisfies { [key: string]: LayerInfo };
+} as const satisfies { [key: string]: LayerInfo };
 
 export type LayerName = keyof typeof LAYERS;
 

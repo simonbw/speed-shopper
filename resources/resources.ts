@@ -20,6 +20,7 @@ const images = {
   tileFloor13: require("./images/tile-floor-13.jpg"),
   orange: require("./images/orange.png"),
   favicon: require("./images/favicon.png"),
+  editorGrid: require("./images/editor-grid.png"),
   demitriTorso: require("./images/demitri-torso.png"),
   demitriRightHand: require("./images/demitri-right-hand.png"),
   demitriRightArm: require("./images/demitri-right-arm.png"),
@@ -42,4 +43,13 @@ const levels = {
 };
 export type LevelName = keyof typeof levels;
 
-export const RESOURCES = { sounds, images, fonts };
+const entityDefs = {
+  orange: require("./entity-defs/orange.json")
+}
+export type EntityDefName = keyof typeof entityDefs;
+
+const jsonBlobs = {
+
+};
+
+export const RESOURCES = { sounds, images, fonts, levels, entityDefs, jsonBlobs };

@@ -28,6 +28,7 @@ export class Cart extends BaseEntity implements Entity {
   wheels: CartWheel[];
 
   merchandises: Merchandise[] = [];
+  merchandiseWeight: number = 0;
 
   constructor(position: [number, number]) {
     super();
@@ -134,6 +135,14 @@ export class Cart extends BaseEntity implements Entity {
 
   addMerchandise(merchandise: Merchandise) {
     this.merchandises.push(merchandise);
+  }
+
+  getWeight() {
+    const merchWeight = this.merchandises.reduce(
+      (sum, merchandise) => sum + merchandise.body.mass,
+      0
+    );
+    return this.body.mass + merchWeight;
   }
 }
 

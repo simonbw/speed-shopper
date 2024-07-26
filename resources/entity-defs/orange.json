@@ -1,0 +1,22 @@
+{
+  "sprites": [
+    {
+      "anchor": [0.5, 0.5],
+      "image": "orange",
+      "layer": "main",
+      "size": [0.2, 0.2]
+    }
+  ],
+  "body": {
+    "mass": 0.1,
+    "shapes": [
+      {
+        "type": "circle",
+        "center": [0, 0],
+        "radius": 0.086,
+        "collisionMask": 63,
+        "collisionGroup": 16
+      }
+    ]
+  }
+}
