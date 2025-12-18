@@ -10,7 +10,7 @@ import { PositionalSound } from "../core/sound/PositionalSound";
 import { choose, rUniform } from "../core/util/Random";
 import { Merchandise } from "./Merchandise";
 import { lineFromPoints } from "../core/util/PhysicsUtils";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 
 const PUSH_STRENGTH = 7.0;
 const PUSH_TORQUE = 0.15;

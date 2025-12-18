@@ -24,7 +24,7 @@ export const SpriteDefsSection: React.FC<{
         />
       ))}
 
-      <button
+      {/* <button
         onClick={() =>
           updateSprites([
             ...sprites,
@@ -38,7 +38,7 @@ export const SpriteDefsSection: React.FC<{
         }
       >
         Add Sprite
-      </button>
+      </button> */}
     </>
   );
 };

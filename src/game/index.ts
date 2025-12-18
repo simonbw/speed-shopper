@@ -25,7 +25,7 @@ async function main() {
   // Make the pixel art crisp
   TextureStyle.defaultOptions.scaleMode = "linear";
 
-  const game = new Game({ tickIterations: 20 });
+  const game = new Game({});
   await game.init({ rendererOptions: { backgroundColor: 0x444454 } });
   // Make the game accessible from the console
   window.DEBUG = { game };
@@ -38,9 +38,7 @@ async function main() {
   game.entities.addFilter(isMerchandise);
 
   if (process.env.NODE_ENV === "development") {
-    const fpsMeter = new FPSMeter();
-    fpsMeter.sprite.layerName = "debugHud";
-    game.addEntity(fpsMeter);
+    game.addEntity(new FPSMeter());
   }
 
   const player = game.addEntity(

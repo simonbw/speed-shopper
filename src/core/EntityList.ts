@@ -125,7 +125,9 @@ export default class EntityList implements Iterable<Entity> {
    * Return all the entities that pass a type guard.
    * Pair with addFilter() to make this fast.
    */
-  getByFilter<T extends Entity>(filter: EntityFilter<T>): Iterable<T> {
+  getByFilter<T extends Entity>(
+    filter: EntityFilter<T>
+  ): Iterable<T> & { readonly length: number } {
     const result = this.filters.getItems(filter);
     return result ?? [...this.all].filter(filter);
   }

@@ -3,7 +3,7 @@ import { Graphics } from "pixi.js";
 import BaseEntity from "../core/entity/BaseEntity";
 import Entity, { GameEventMap } from "../core/entity/Entity";
 import { V2d } from "../core/Vector";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 import { isMerchandise } from "./Merchandise";
 
 export class Checkout extends BaseEntity implements Entity {

@@ -19,7 +19,7 @@ import { lerp } from "./util/MathUtil";
 
 interface GameOptions {
   audio?: AudioContext;
-  tickIterations?: number;
+  ticksPerSecond?: number;
   world?: World | CustomWorld;
 }
 
@@ -60,8 +60,10 @@ export default class Game {
   ticknumber: number = 0;
   /** The timestamp when the last frame started */
   lastFrameTime: number = window.performance.now();
-  /** Number of ticks that happen per frame */
-  tickIterations: number;
+  /** Number of ticks that happen per frame at regular speed */
+  readonly ticksPerSecond: number;
+  /** Number of seconds to simulate per tick */
+  readonly tickDuration: number;
 
   /** Total amount of game time that has elapsed */
   elapsedTime: number = 0;
@@ -76,7 +78,7 @@ export default class Game {
   }
 
   get averageDt() {
-    return this.slowMo / (this.averageFrameDuration * this.tickIterations);
+    return this.slowMo / (this.averageFrameDuration * this.ticksPerSecond);
   }
 
   private _slowMo: number = 1.0;
@@ -96,7 +98,7 @@ export default class Game {
    * Create a new Game.
    * NOTE: You must call .init() before actually using the game.
    */
-  constructor({ audio, tickIterations = 2, world }: GameOptions = {}) {
+  constructor({ audio, ticksPerSecond = 120, world }: GameOptions = {}) {
     this.entities = new EntityList();
     this.entitiesToRemove = new Set();
 
@@ -106,7 +108,8 @@ export default class Game {
       this.onResize.bind(this)
     );
 
-    this.tickIterations = tickIterations;
+    this.ticksPerSecond = ticksPerSecond;
+    this.tickDuration = 1.0 / this.ticksPerSecond;
     // this.world = new World({ gravity: [0, 0] });
     this.world = world ?? new CustomWorld({ gravity: [0, 0] });
     this.world.on("beginContact", this.beginContact, null);
@@ -269,7 +272,18 @@ export default class Game {
     return entity;
   }
 
-  /** Remove all non-persistent entities. I think this is kinda sketchy. */
+  /**
+   * Removes all non-persistent entities from the game scene.
+   * Only removes top-level entities (those without parents) to avoid double-cleanup.
+   * 
+   * @param persistenceThreshold - Entities with persistence level <= this value will be removed (default: 0)
+   * @example
+   * // Remove all level-specific entities (Persistence.Level)
+   * game.clearScene();
+   * 
+   * // Remove level and game-specific entities (Persistence.Level and Persistence.Game)
+   * game.clearScene(Persistence.Game);
+   */
   clearScene(persistenceThreshold = 0) {
     for (const entity of this.entities) {
       if (
@@ -283,6 +297,7 @@ export default class Game {
     }
   }
 
+  private timeToSimulate = 0.0;
   private iterationsRemaining = 0.0;
   /** The main event loop. Run one frame of the game.  */
   private loop(time: number): void {
@@ -312,22 +327,27 @@ export default class Game {
 
     this.slowTick(renderDt * this.slowMo);
 
-    const tickDt = (renderDt / this.tickIterations) * this.slowMo;
-    this.iterationsRemaining += this.tickIterations;
-    for (; this.iterationsRemaining > 1.0; this.iterationsRemaining--) {
-      this.tick(tickDt);
+    this.timeToSimulate += renderDt * this.slowMo;
+    while (this.timeToSimulate >= this.tickDuration) {
+      this.timeToSimulate -= this.tickDuration;
+      this.tick(this.tickDuration);
       if (!this.paused) {
-        const stepDt = tickDt;
+        const stepDt = this.tickDuration;
         this.world.step(stepDt);
         this.cleanupEntities();
         this.contacts();
       }
     }
+
     this.afterPhysics();
 
     this.render(renderDt);
   }
 
+  /**
+   * Calculates and returns the current screen frames per second based on average frame duration.
+   * @returns The current FPS rounded to the nearest integer
+   */
   getScreenFps(): number {
     const duration = this.averageFrameDuration;
     return Math.round(1.0 / duration);

@@ -6,7 +6,7 @@ import { normalizeAngle, polarToVec } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
 import { CartSpring } from "./CartSpring";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 import { HumanSprite } from "./HumanSprite";
 import { Stride } from "./Stride";
 import { VelocityDisplay } from "./VelocityDisplay";

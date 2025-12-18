@@ -1,8 +1,8 @@
-import { Container, Sprite } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { ImageName } from "../../../resources/resources";
 import { LayerName } from "../../config/layers";
-import { WithOwner } from "./WithOwner";
 import { SpriteDef } from "../EntityDef";
+import { WithOwner } from "./WithOwner";
 
 /**
  * An extension of Pixi's Container class that lets us easily specify which layer a
@@ -33,4 +33,10 @@ export function spriteFromDef(spriteDef: SpriteDef): GameSprite {
     anchor: spriteDef.anchor,
     size: spriteDef.size,
   });
+}
+
+export function createGraphics(layerName: LayerName): GameSprite & Graphics {
+  const graphics = new Graphics() as GameSprite & Graphics;
+  graphics.layerName = layerName;
+  return graphics;
 }

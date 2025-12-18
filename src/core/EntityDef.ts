@@ -1,6 +1,5 @@
 import { ImageName } from "../../resources/resources";
 import { LayerName } from "../config/layers";
-import { loadGameSprite } from "./entity/GameSprite";
 
 export interface SpriteDef {
   image: ImageName;
