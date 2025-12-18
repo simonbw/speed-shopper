@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  CollisionGroups,
-  collisionGroupToNames,
-} from "../../game/config/CollisionGroups";
+import { CollisionGroups, collisionGroupToNames } from "../../config/CollisionGroups";
 import { BoxDef, CircleDef, ConvexDef, LineDef, ShapeDef } from "../EntityDef";
 import { objectEntries, pick } from "../util/ObjectUtils";
 import { CollapsibleCard } from "./CollapsibleCard";

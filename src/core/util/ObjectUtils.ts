@@ -33,3 +33,22 @@ export function pick<T extends object, K extends keyof T>(
     {} as Pick<T, K>
   );
 }
+
+export function grouped<T, K extends string = string>(
+  arr: ReadonlyArray<T>,
+  getKey: (item: T) => K
+): [K, T[]][] {
+  return objectEntries(
+    arr.reduce(
+      (acc, item) => {
+        const key = getKey(item);
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(item);
+        return acc;
+      },
+      {} as Record<K, T[]>
+    )
+  );
+}

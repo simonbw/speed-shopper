@@ -14,22 +14,22 @@ const sounds = {
 export type SoundName = keyof typeof sounds;
 
 const images = {
-  wallAo1: require("./images/wall-ao-1.png"),
-  wall1: require("./images/wall-1.png"),
-  tileFloor14: require("./images/tile-floor-14.jpg"),
-  tileFloor13: require("./images/tile-floor-13.jpg"),
-  orange: require("./images/orange.png"),
-  favicon: require("./images/favicon.png"),
-  editorGrid: require("./images/editor-grid.png"),
-  demitriTorso: require("./images/demitri-torso.png"),
-  demitriRightHand: require("./images/demitri-right-hand.png"),
-  demitriRightArm: require("./images/demitri-right-arm.png"),
-  demitriLeftHand: require("./images/demitri-left-hand.png"),
-  demitriLeftArm: require("./images/demitri-left-arm.png"),
-  demitriHead: require("./images/demitri-head.png"),
-  cart: require("./images/cart.png"),
-  cartWheel: require("./images/cart-wheel.png"),
-  bathroomTileFloor1: require("./images/bathroom-tile-floor-1.png")
+  wallAo1: require("url:./images/wall-ao-1.png"),
+  wall1: require("url:./images/wall-1.png"),
+  tileFloor14: require("url:./images/tile-floor-14.jpg"),
+  tileFloor13: require("url:./images/tile-floor-13.jpg"),
+  orange: require("url:./images/orange.png"),
+  favicon: require("url:./images/favicon.png"),
+  editorGrid: require("url:./images/editor-grid.png"),
+  demitriTorso: require("url:./images/demitri-torso.png"),
+  demitriRightHand: require("url:./images/demitri-right-hand.png"),
+  demitriRightArm: require("url:./images/demitri-right-arm.png"),
+  demitriLeftHand: require("url:./images/demitri-left-hand.png"),
+  demitriLeftArm: require("url:./images/demitri-left-arm.png"),
+  demitriHead: require("url:./images/demitri-head.png"),
+  cart: require("url:./images/cart.png"),
+  cartWheel: require("url:./images/cart-wheel.png"),
+  bathroomTileFloor1: require("url:./images/bathroom-tile-floor-1.png")
 };
 export type ImageName = keyof typeof images;
 

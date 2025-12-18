@@ -3,7 +3,7 @@ import BaseEntity from "../core/entity/BaseEntity";
 import Entity from "../core/entity/Entity";
 import { loadGameSprite } from "../core/entity/GameSprite";
 import { V } from "../core/Vector";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 
 export default class Wall extends BaseEntity implements Entity {
   constructor([x1, y1]: [number, number], [x2, y2]: [number, number]) {

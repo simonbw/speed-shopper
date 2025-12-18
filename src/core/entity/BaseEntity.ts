@@ -1,11 +1,11 @@
 import p2, { Body, Constraint, Spring } from "p2";
+import { EntityDef } from "../EntityDef";
 import Game from "../Game";
 import { V, V2d } from "../Vector";
 import { clamp } from "../util/MathUtil";
-import Entity from "./Entity";
-import { GameSprite, loadGameSprite, spriteFromDef } from "./GameSprite";
-import { EntityDef } from "../EntityDef";
-import { lineFromPoints, shapeFromDef } from "../util/PhysicsUtils";
+import { shapeFromDef } from "../util/PhysicsUtils";
+import Entity, { GameEventMap } from "./Entity";
+import { GameSprite, spriteFromDef } from "./GameSprite";
 
 /**
  * Base class for lots of stuff in the game.
@@ -77,6 +77,8 @@ export default abstract class BaseEntity implements Entity {
   getPosition(): V2d {
     if (this.body) {
       return V(this.body.position);
+    } else if (this.sprite) {
+      return V(this.sprite.position.x, this.sprite.position.y);
     }
     throw new Error("Position is not implemented for this entity");
   }
@@ -218,6 +220,15 @@ export default abstract class BaseEntity implements Entity {
         }
       }
     }
+  }
+
+  /** Dispatch an event. */
+  dispatch<EventName extends keyof GameEventMap>(
+    eventName: EventName,
+    data: GameEventMap[EventName],
+    respectPause?: boolean
+  ) {
+    this.game?.dispatch(eventName, data, respectPause);
   }
 }
 

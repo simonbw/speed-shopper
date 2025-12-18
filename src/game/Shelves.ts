@@ -4,7 +4,7 @@ import Entity from "../core/entity/Entity";
 import { V, V2d } from "../core/Vector";
 import { BlurFilter, Graphics } from "pixi.js";
 import { GameSprite } from "../core/entity/GameSprite";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 
 const FRICTION = 100;
 const ANGULAR_FRICTION = 1000;

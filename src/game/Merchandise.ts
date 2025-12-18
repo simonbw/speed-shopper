@@ -6,7 +6,7 @@ import Entity from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { Cart } from "./Cart";
 import { HumanArm } from "./HumanArm";
-import { CollisionGroups } from "./config/CollisionGroups";
+import { CollisionGroups } from "../config/CollisionGroups";
 import { RESOURCES } from "../../resources/resources";
 import { stepToward } from "../core/util/MathUtil";
 
