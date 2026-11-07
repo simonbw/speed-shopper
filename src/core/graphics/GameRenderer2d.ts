@@ -2,7 +2,7 @@ import * as Pixi from "pixi.js";
 import { LAYERS, LayerName } from "../../config/layers";
 import { V, V2d } from "../Vector";
 import { GameSprite } from "../entity/GameSprite";
-import { Camera2d } from "./Camera2d";
+import { Camera2d, ViewportProvider } from "./Camera2d";
 import { LayerInfo } from "./LayerInfo";
 
 /** Options for the GameRenderer2d constructor */
@@ -11,7 +11,7 @@ export interface GameRenderer2dOptions extends Partial<Pixi.RendererOptions> {}
 /** The thing that renders stuff to the screen. Mostly for handling layers.
  * TODO: Document GameRenderer2d better
  */
-export class GameRenderer2d {
+export class GameRenderer2d implements ViewportProvider {
   // TODO: Do we really need to store this ourselves? Can't we just set it on the canvas?
   private cursor: CSSStyleDeclaration["cursor"] = "none";
 
@@ -44,7 +44,7 @@ export class GameRenderer2d {
   constructor(
     private layerInfos: Record<LayerName, LayerInfo>,
     private defaultLayerName: LayerName,
-    private onResize?: ([width, height]: [number, number]) => void
+    private onResize?: ([width, height]: [number, number]) => void,
   ) {
     this.app = new Pixi.Application();
     this.showCursor();
@@ -54,7 +54,14 @@ export class GameRenderer2d {
       this.app.stage.addChild(layerInfo.container);
     }
 
-    window.addEventListener("resize", () => this.handleResize());
+    window.addEventListener("resize", this.handleResize);
+  }
+
+  /** Tear down the Pixi application and remove the canvas from the page. */
+  destroy(): void {
+    window.removeEventListener("resize", this.handleResize);
+    this.canvas.remove();
+    this.app.destroy(false, { children: true });
   }
 
   async init(pixiOptions: GameRenderer2dOptions = {}) {
@@ -63,6 +70,10 @@ export class GameRenderer2d {
         resizeTo: window,
         autoDensity: true,
         antialias: true,
+        // We call render() ourselves. With Pixi's ticker running, it would also
+        // draw the stage on every animation frame: twice a frame with vsync,
+        // and many times a frame without
+        autoStart: false,
         ...pixiOptions,
       })
       .then(() => {
@@ -70,38 +81,55 @@ export class GameRenderer2d {
       });
   }
 
-  /** TODO: Document request fullscreen */
+  /**
+   * Goes fullscreen on the next click anywhere on the page. The whole document
+   * goes fullscreen rather than just the canvas so that HTML overlays (see
+   * ReactEntity) stay visible.
+   */
   requestFullscreen() {
     const makeFullScreen = () => {
-      this.canvas.requestFullscreen();
-      this.canvas.removeEventListener("click", makeFullScreen);
+      document.documentElement.requestFullscreen().catch(() => {
+        // The browser can refuse (e.g. iframes without the permission); that's fine
+      });
     };
-    this.canvas.addEventListener("click", makeFullScreen);
+    document.addEventListener("click", makeFullScreen, { once: true });
   }
 
   /**
    * Gets the effective height of the renderer viewport in logical pixels.
    */
   getHeight(): number {
-    return this.app.renderer.height / this.app.renderer.resolution;
+    return this.app.renderer.height;
   }
 
   /**
    * Gets the effective width of the renderer viewport in logical pixels.
    */
   getWidth(): number {
-    return this.app.renderer.width / this.app.renderer.resolution;
+    return this.app.renderer.width;
   }
 
   getSize(): V2d {
     return V(this.getWidth(), this.getHeight());
   }
 
-  handleResize() {
+  /** Whether the canvas is antialiased (fixed when it's made, by `init`'s options) */
+  get antialias(): boolean {
+    const gl = (this.app.renderer as { gl?: WebGL2RenderingContext }).gl;
+    return gl?.getContextAttributes()?.antialias ?? false;
+  }
+
+  /** Change the number of device pixels rendered per logical pixel. */
+  setResolution(resolution: number) {
+    this.app.renderer.resolution = resolution;
+    this.handleResize();
+  }
+
+  handleResize = () => {
     this.app.resizeTo = window;
     this.app.resize();
     this.onResize?.(this.getSize());
-  }
+  };
 
   hideCursor() {
     this.cursor = "none";
@@ -147,26 +175,25 @@ export class GameRenderer2d {
    */
   addLayerFilter(filter: Pixi.Filter, layerName: LayerName): void {
     const container = this.layerInfos[layerName].container;
-    if (!(container.filters instanceof Array)) {
-      throw new Error("layer.filters is not an array");
-    }
-    container.filters;
-    container.filters = [...container.filters!, filter];
+    container.filters = [...getFilters(container), filter];
   }
 
   addStageFilter(filter: Pixi.Filter): void {
-    if (!(this.stage.filters instanceof Array)) {
-      throw new Error("stage.filters is not an array");
-    }
-    this.stage.filters = [...(this.stage.filters ?? []), filter];
+    this.stage.filters = [...getFilters(this.stage), filter];
   }
 
   removeStageFilter(filterToRemove: Pixi.Filter): void {
-    if (!(this.stage.filters instanceof Array)) {
-      throw new Error("stage.filters is not an array");
-    }
-    this.stage.filters = (this.stage.filters ?? []).filter(
-      (filter) => filter != filterToRemove
+    this.stage.filters = getFilters(this.stage).filter(
+      (filter) => filter != filterToRemove,
     );
   }
+}
+
+/** Pixi lets filters be a single filter, a list, or nothing. This always gives a list. */
+function getFilters(container: Pixi.Container): readonly Pixi.Filter[] {
+  const filters = container.filters;
+  if (!filters) {
+    return [];
+  }
+  return filters instanceof Array ? filters : [filters];
 }

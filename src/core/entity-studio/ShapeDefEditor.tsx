@@ -1,15 +1,21 @@
-import React from "react";
-import { CollisionGroups, collisionGroupToNames } from "../../config/CollisionGroups";
+import { CollisionGroups } from "../../config/CollisionGroups";
 import { BoxDef, CircleDef, ConvexDef, LineDef, ShapeDef } from "../EntityDef";
+import { collisionGroupToNames } from "../util/CollisionGroupUtils";
 import { objectEntries, pick } from "../util/ObjectUtils";
 import { CollapsibleCard } from "./CollapsibleCard";
 import { PointInput } from "./PointInput";
 
-export const ShapeDefEditor: React.FC<{
+interface ShapeDefEditorProps {
   shapeDef: ShapeDef;
   update: (shapeDef: ShapeDef) => void;
   remove: () => void;
-}> = ({ shapeDef, update, remove }) => {
+}
+
+export const ShapeDefEditor = ({
+  shapeDef,
+  update,
+  remove,
+}: ShapeDefEditorProps) => {
   return (
     <CollapsibleCard summary={shapeDef.type} onRemove={remove}>
       <ShapeDefTypeSelect shapeDef={shapeDef} update={update} />
@@ -60,10 +66,15 @@ export const ShapeDefEditor: React.FC<{
   );
 };
 
-const CollisionGroupSelector: React.FC<{
+interface CollisionGroupSelectorProps {
   value: number;
   onChange: (value: number) => void;
-}> = ({ value, onChange }) => {
+}
+
+const CollisionGroupSelector = ({
+  value,
+  onChange,
+}: CollisionGroupSelectorProps) => {
   const collisionGroupNames = collisionGroupToNames(value);
   const label =
     collisionGroupNames.length === 0 ? "None" : collisionGroupNames.join(", ");
@@ -77,7 +88,7 @@ const CollisionGroupSelector: React.FC<{
               type="checkbox"
               checked={value === CollisionGroups.All}
               onChange={(event) => {
-                const checked = event.target.checked;
+                const checked = (event.target as HTMLInputElement).checked;
                 const newValue = checked
                   ? CollisionGroups.All
                   : CollisionGroups.None;
@@ -97,7 +108,7 @@ const CollisionGroupSelector: React.FC<{
                   type="checkbox"
                   checked={(group & value) !== 0}
                   onChange={(event) => {
-                    const checked = event.target.checked;
+                    const checked = (event.target as HTMLInputElement).checked;
                     const newValue = checked ? value | group : value & ~group;
                     onChange(newValue);
                   }}
@@ -112,10 +123,12 @@ const CollisionGroupSelector: React.FC<{
   );
 };
 
-const ShapeDefTypeSelect: React.FC<{
+interface ShapeDefTypeSelectProps {
   shapeDef: ShapeDef;
   update: (newDef: ShapeDef) => void;
-}> = ({ shapeDef, update }) => {
+}
+
+const ShapeDefTypeSelect = ({ shapeDef, update }: ShapeDefTypeSelectProps) => {
   const common = pick(shapeDef, ["collisionGroup", "collisionMask"]);
   return (
     <label>
@@ -123,7 +136,9 @@ const ShapeDefTypeSelect: React.FC<{
       <select
         value={shapeDef.type}
         onChange={(event) => {
-          switch (event.target.value as ShapeDef["type"]) {
+          switch (
+            (event.target as HTMLSelectElement).value as ShapeDef["type"]
+          ) {
             case "line":
               return update({
                 ...common,
@@ -168,10 +183,12 @@ const ShapeDefTypeSelect: React.FC<{
   );
 };
 
-const CircleDefEditor: React.FC<{
+interface CircleDefEditorProps {
   circleDef: CircleDef;
   update: (newDef: CircleDef) => void;
-}> = ({ circleDef, update }) => {
+}
+
+const CircleDefEditor = ({ circleDef, update }: CircleDefEditorProps) => {
   return (
     <div>
       <label>
@@ -189,7 +206,10 @@ const CircleDefEditor: React.FC<{
           step={0.01}
           value={circleDef.radius}
           onChange={(event) =>
-            update({ ...circleDef, radius: parseFloat(event.target.value) })
+            update({
+              ...circleDef,
+              radius: parseFloat((event.target as HTMLInputElement).value),
+            })
           }
           min={0}
         />
@@ -198,10 +218,12 @@ const CircleDefEditor: React.FC<{
   );
 };
 
-const LineDefEditor: React.FC<{
+interface LineDefEditorProps {
   lineDef: LineDef;
   update: (newDef: LineDef) => void;
-}> = ({ lineDef, update }) => {
+}
+
+const LineDefEditor = ({ lineDef, update }: LineDefEditorProps) => {
   return (
     <div>
       <label>
@@ -224,10 +246,12 @@ const LineDefEditor: React.FC<{
   );
 };
 
-const BoxDefEditor: React.FC<{
+interface BoxDefEditorProps {
   boxDef: BoxDef;
   update: (newDef: BoxDef) => void;
-}> = ({ boxDef, update }) => {
+}
+
+const BoxDefEditor = ({ boxDef, update }: BoxDefEditorProps) => {
   return (
     <div>
       <label>
@@ -254,7 +278,10 @@ const BoxDefEditor: React.FC<{
           step={0.01}
           value={boxDef.angle}
           onChange={(event) =>
-            update({ ...boxDef, angle: parseFloat(event.target.value) })
+            update({
+              ...boxDef,
+              angle: parseFloat((event.target as HTMLInputElement).value),
+            })
           }
         />
       </label>
@@ -262,16 +289,17 @@ const BoxDefEditor: React.FC<{
   );
 };
 
-const ConvexDefEditor: React.FC<{
+interface ConvexDefEditorProps {
   convexDef: ConvexDef;
   update: (newDef: ConvexDef) => void;
-}> = ({ convexDef, update }) => {
+}
+
+const ConvexDefEditor = ({ convexDef, update }: ConvexDefEditorProps) => {
   return (
     <div>
       {convexDef.vertices.map((vertex, i) => (
-        <label>
+        <label key={i}>
           <PointInput
-            key={i}
             value={vertex}
             step={0.01}
             onChange={(p) =>

@@ -1,12 +1,11 @@
 import { Container, Sprite } from "pixi.js";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
-import { V, V2d } from "../core/Vector";
-import { lerpV2d, polarToVec } from "../core/util/MathUtil";
 import { ImageName } from "../../resources/resources";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
+import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { V, V2d } from "../core/Vector";
 import { Human } from "./Human";
-import { ARM_LENGTH } from "./HumanArm";
 
 export interface HumanTextures {
   head: ImageName;
@@ -31,7 +30,7 @@ export class HumanSprite extends BaseEntity implements Entity {
   constructor(
     public readonly human: Human,
     textures: HumanTextures,
-    private radius: number
+    private radius: number,
   ) {
     super();
 
@@ -74,7 +73,8 @@ export class HumanSprite extends BaseEntity implements Entity {
     this.sprite.addChild(this.headSprite);
   }
 
-  onRender(dt: number) {
+  @on("render")
+  onRender() {
     [this.sprite.x, this.sprite.y] = this.getPosition();
     this.sprite.rotation = this.getAngle();
 

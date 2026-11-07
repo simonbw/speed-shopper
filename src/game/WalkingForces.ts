@@ -1,10 +1,10 @@
-import { Body } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { createGraphics } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { clamp } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
-import { clamp, lerpV2d } from "../core/util/MathUtil";
-import { Graphics } from "pixi.js";
-import { KeyCode } from "../core/io/Keys";
 
 export class WalkingForces extends BaseEntity implements Entity {
   // The position we're walking to, otherwise
@@ -16,18 +16,20 @@ export class WalkingForces extends BaseEntity implements Entity {
     public humanBody: Body,
     public maxSpeed: number = 4, // meters / sec
     public maxAcceleration: number = 10, // meters / sec^2
-    public damping: number = 1.0 // ?
+    public damping: number = 1.0, // ?
   ) {
     super();
 
-    this.sprite = new Graphics().circle(0, 0, 0.03).fill(0xff0000);
+    this.sprite = createGraphics("debugWorld")
+      .circle(0, 0, 0.03)
+      .fill(0xff0000);
     this.sprite.visible = false;
   }
 
   /** Walk towards a specific point, and try to arrive at a specific velocity */
   walkToPoint(
     targetPosition: [number, number],
-    targetVelocity: [number, number] = [0, 0]
+    targetVelocity: [number, number] = [0, 0],
   ) {
     if (!this.targetPosition) {
       this.targetPosition = V(targetPosition);
@@ -47,6 +49,7 @@ export class WalkingForces extends BaseEntity implements Entity {
       .imul(speed);
   }
 
+  @on("tick")
   onTick() {
     if (this.enabled) {
       const stiffness = 1000;
@@ -81,12 +84,14 @@ export class WalkingForces extends BaseEntity implements Entity {
     }
   }
 
-  onKeyDown({ key }: { key: KeyCode }) {
+  @on("keyDown")
+  onKeyDown({ key }: GameEventMap["keyDown"]) {
     if (key === "Digit0") {
       this.sprite!.visible = !this.sprite!.visible;
     }
   }
 
+  @on("render")
   onRender() {
     if (this.targetPosition) {
       this.sprite!.alpha = 0.7;

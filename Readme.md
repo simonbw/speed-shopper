@@ -1,6 +1,6 @@
 # Speed Shopper
 
-# Simon's Game Engine
+Built on Simon's game engine (`src/core/`).
 
 TODO: Write intro
 
@@ -10,7 +10,7 @@ TODO: Write intro
 2. Clone this repo
 3. Run `npm install` inside this repo
 4. Run `npm start` to start the dev server
-5. You should now be able to play the game at http://localhost:1234
+5. You should now be able to play the game at http://localhost:1240 (the dev port is set in `ports.mts`)
 
 ## Structure of this project
 
@@ -57,14 +57,15 @@ The code for this project is written in [TypeScript](https://www.typescriptlang.
 
 This game uses a 2d rendering engine called [Pixi.js](https://pixijs.com/).
 
-### P2.js
+### Physics
 
-This game uses a 2d physics engine called [p2.js](https://github.com/schteppe/p2.js/).
-It isn't the most performant or featureful engine, but the API is really simple, which is why I originally chose it.
-I'm hoping to replace it soon.
+Physics is the engine's own 2D rigid body engine, in `src/core/physics/`: a TypeScript port of [p2.js](https://github.com/schteppe/p2.js/) with a faster solver.
 
-### Parcel
+### Vite
 
-This project uses [Parcel](https://parceljs.org/) as the bundler and dev server.
-It handles everything with almost zero configuration and tends to _just work_.
-Hopefully you shouldn't have to mess with this.
+This project uses [Vite](https://vite.dev/) as the bundler and dev server (`vite.config.mts`).
+Vite doesn't type check, so run `npm run tsc` too.
+
+### Tests
+
+`npm test` runs the engine's unit tests in Node, then the browser tests in headless Chrome, including `tests/game.spec.ts`, which plays through walking, pushing a cart, picking something up and buying it.

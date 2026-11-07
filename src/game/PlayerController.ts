@@ -1,8 +1,7 @@
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { KeyCode } from "../core/io/Keys";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
 import { clamp } from "../core/util/MathUtil";
-import { V } from "../core/Vector";
 import { isCart } from "./Cart";
 import { getClosest } from "./getClosest";
 import { Human } from "./Human";
@@ -15,7 +14,8 @@ export class PlayerController extends BaseEntity implements Entity {
     this.human = human;
   }
 
-  onKeyDown({ key }: { key: KeyCode }) {
+  @on("keyDown")
+  onKeyDown({ key }: GameEventMap["keyDown"]) {
     if (key === "Space") {
       if (this.human.cart === undefined) {
         const carts = this.game!.entities.getByFilter(isCart);
@@ -30,6 +30,7 @@ export class PlayerController extends BaseEntity implements Entity {
     }
   }
 
+  @on("tick")
   onTick() {
     const io = this.game!.io;
     const shiftIsDown = io.isKeyDown("ShiftLeft") || io.isKeyDown("ShiftRight");
@@ -52,8 +53,7 @@ export class PlayerController extends BaseEntity implements Entity {
 
       const targetPosition = cart.localToWorld([0, 0.5 + 0.31]);
       const targetVelocity = cart.body.getVelocityAtPoint(
-        V(0, 0),
-        targetPosition.sub(cart.body.position)
+        targetPosition.sub(cart.body.position),
       );
 
       this.human.walkSpring.walkToPoint(targetPosition, targetVelocity);
@@ -67,7 +67,7 @@ export class PlayerController extends BaseEntity implements Entity {
 
       this.human.walkSpring.walkInDirection(
         walkDirection,
-        walkDirection.magnitude
+        walkDirection.magnitude,
       );
 
       // Aiming

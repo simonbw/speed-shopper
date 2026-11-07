@@ -1,6 +1,7 @@
-import { DistanceConstraint } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
+import { DistanceConstraint } from "../core/physics/constraints/DistanceConstraint";
 import { Cart } from "./Cart";
 import { Human } from "./Human";
 import { ARM_LENGTH } from "./HumanArm";
@@ -13,7 +14,7 @@ export class CartSpring extends BaseEntity implements Entity {
 
   constructor(
     private human: Human,
-    private cart: Cart
+    private cart: Cart,
   ) {
     super();
 
@@ -31,7 +32,7 @@ export class CartSpring extends BaseEntity implements Entity {
         localAnchorA: leftShoulderPosition,
         localAnchorB: leftHandPosition,
         maxForce: GRIP_STRENGTH,
-      }
+      },
     );
     leftDistanceConstraint.lowerLimitEnabled = false;
     leftDistanceConstraint.upperLimitEnabled = true;
@@ -46,7 +47,7 @@ export class CartSpring extends BaseEntity implements Entity {
         localAnchorA: rightShoulderPosition,
         localAnchorB: rightHandPosition,
         maxForce: GRIP_STRENGTH,
-      }
+      },
     );
     rightDistanceConstraint.lowerLimitEnabled = false;
     rightDistanceConstraint.upperLimitEnabled = true;
@@ -56,6 +57,7 @@ export class CartSpring extends BaseEntity implements Entity {
     this.constraints = [leftDistanceConstraint, rightDistanceConstraint];
   }
 
+  @on("tick")
   onTick() {
     if (this.human.leftArm.merchandise || this.human.leftArm.extension > 0) {
       this.leftDistanceConstraint.setMaxForce(0);

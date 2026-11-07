@@ -1,9 +1,10 @@
-import { Body } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { V } from "../core/Vector";
 import { Text } from "pixi.js";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
 import { GameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { V } from "../core/Vector";
 
 export class VelocityDisplay extends BaseEntity implements Entity {
   sprite: GameSprite & Text;
@@ -28,9 +29,10 @@ export class VelocityDisplay extends BaseEntity implements Entity {
     this.sprite.layerName = "hud";
   }
 
+  @on("render")
   onRender() {
     this.sprite.position.set(
-      ...this.game!.camera.toScreen(V(this.targetBody.position))
+      ...this.game!.camera.toScreen(V(this.targetBody.position)),
     );
 
     const speed = V(this.targetBody.velocity).magnitude;

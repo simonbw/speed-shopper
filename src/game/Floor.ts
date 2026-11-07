@@ -1,10 +1,10 @@
 import { TilingSprite } from "pixi.js";
 import { ImageName } from "../../resources/resources";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
 import { GameSprite } from "../core/entity/GameSprite";
 import { V2d } from "../core/Vector";
-import { Persistence } from "./config/constants";
+import { Persistence } from "../config/constants";
 
 export class Floor extends BaseEntity implements Entity {
   persistenceLevel: Persistence = Persistence.Game;
@@ -14,7 +14,7 @@ export class Floor extends BaseEntity implements Entity {
     topLeft: V2d,
     bottomRight: V2d,
     texture: ImageName = "tileFloor13",
-    scale: number = 0.004
+    scale: number = 0.004,
   ) {
     super();
 
