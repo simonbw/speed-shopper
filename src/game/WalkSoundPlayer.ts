@@ -1,7 +1,7 @@
 import { SoundName } from "../../resources/resources";
-import BaseEntity from "../core/entity/BaseEntity";
+import { BaseEntity } from "../core/entity/BaseEntity";
 import { PositionalSound } from "../core/sound/PositionalSound";
-import { choose, rUniform } from "../core/util/Random";
+import { cosmeticRandom } from "../core/util/Random";
 import { Human } from "./Human";
 
 const walkSounds: SoundName[] = [
@@ -21,12 +21,12 @@ export class WalkSoundPlayer extends BaseEntity {
   }
 
   playFootstep() {
-    const soundName = choose(...runSounds);
+    const soundName = cosmeticRandom.choose(...runSounds);
     this.addChild(
       new PositionalSound(soundName, this.human.getPosition(), {
-        speed: rUniform(0.9, 1.1),
+        speed: cosmeticRandom.uniform(0.9, 1.1),
         gain: 0.4,
-      })
+      }),
     );
   }
 }

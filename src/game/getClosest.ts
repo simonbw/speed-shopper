@@ -4,7 +4,7 @@ import { Cart } from "./Cart";
 export function getClosest(
   origin: V2d,
   carts: Iterable<Cart>,
-  threshold: number = Infinity
+  threshold: number = Infinity,
 ): Cart | undefined {
   let closest: Cart | undefined;
   let closestDistance = threshold;

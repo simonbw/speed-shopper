@@ -1,12 +1,16 @@
-import { Body } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
 import { Camera2d } from "../core/graphics/Camera2d";
-import { V, V2d } from "../core/Vector";
+import { PositionalSoundListener } from "../core/sound/PositionalSoundListener";
+import { V } from "../core/Vector";
 import { Human } from "./Human";
-import PositionalSoundListener from "../core/sound/PositionalSoundListener";
 
-type Target = { getPosition: () => V2d; body: Body };
+// The camera is a spring toward the target, tuned to lag behind and swing a
+// little. The engine's `smoothCenter` is a different (critically damped)
+// follow, so this keeps the old one.
+const CAMERA_STIFFNESS = 0.3;
+const CAMERA_DAMPING = 0.15;
 
 export class CameraController extends BaseEntity implements Entity {
   camera: Camera2d;
@@ -24,12 +28,23 @@ export class CameraController extends BaseEntity implements Entity {
     this.soundListener = this.addChild(new PositionalSoundListener());
   }
 
-  onLateRender() {
+  @on("tick")
+  onTick({ dt }: GameEventMap["tick"]) {
     const target = this.player.cart ? this.player.cart : this.player;
-    const velocity = V(target.body.velocity);
-    this.camera.smoothCenter(target.getPosition(), velocity, 0.3, 0.15);
-    this.camera.smoothZoom(130 - 2 * velocity.magnitude);
+    const [x, y] = target.getPosition();
+    const [vx, vy] = target.body.velocity;
+    const camera = this.camera;
+    camera.vx +=
+      (CAMERA_STIFFNESS * (x - camera.x) - CAMERA_DAMPING * (camera.vx - vx)) *
+      dt;
+    camera.vy +=
+      (CAMERA_STIFFNESS * (y - camera.y) - CAMERA_DAMPING * (camera.vy - vy)) *
+      dt;
+    this.camera.smoothZoom(130 - 2 * V(target.body.velocity).magnitude);
+  }
 
-    this.soundListener.setPosition(this.camera.position);
+  @on("lateRender")
+  onLateRender() {
+    this.soundListener.setPosition(V(this.camera.position));
   }
 }

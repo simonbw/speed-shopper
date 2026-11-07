@@ -1,10 +1,13 @@
-import { Body, Box, LockConstraint } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { V, V2d } from "../core/Vector";
 import { BlurFilter, Graphics } from "pixi.js";
-import { GameSprite } from "../core/entity/GameSprite";
 import { CollisionGroups } from "../config/CollisionGroups";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
+import { createGraphics, GameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { createRigid2D } from "../core/physics/body/bodyFactories";
+import { Box } from "../core/physics/shapes/Box";
+import { V, V2d } from "../core/Vector";
 
 const FRICTION = 100;
 const ANGULAR_FRICTION = 1000;
@@ -17,8 +20,8 @@ export class Shelves extends BaseEntity implements Entity {
   constructor(position: V2d) {
     super();
 
-    this.body = new Body({
-      type: Body.DYNAMIC,
+    this.body = createRigid2D({
+      motion: "dynamic",
       position,
       mass: MASS,
     });
@@ -26,26 +29,30 @@ export class Shelves extends BaseEntity implements Entity {
     const width = 2;
     const height = 10;
 
-    const shape = new Box({ width, height });
-    shape.collisionGroup = CollisionGroups.Environment;
-    shape.collisionMask = CollisionGroups.All;
+    const shape = new Box({
+      width,
+      height,
+      collisionGroup: CollisionGroups.Environment,
+      collisionMask: CollisionGroups.All,
+    });
     this.body.addShape(shape);
 
-    this.sprite = new Graphics({ position })
+    this.sprite = createGraphics("walls")
       .rect(-width / 2, -height / 2, width, height)
       .fill(0xccbbaa);
-    this.sprite.layerName = "walls";
+    this.sprite.position.set(...position);
 
     const shadowWidth = width + 0.2;
     const shadowHeight = height + 0.2;
-    const shadowSprite = new Graphics({ position })
+    const shadowSprite = createGraphics("shadows")
       .rect(-shadowWidth / 2, -shadowHeight / 2, shadowWidth, shadowHeight)
       .fill({ color: 0x000000, alpha: 0.15 });
     shadowSprite.filters = [new BlurFilter({})];
+    shadowSprite.position.set(...position);
     this.sprites = [shadowSprite];
-    this.sprites[0].layerName = "shadows";
   }
 
+  @on("tick")
   onTick() {
     const friction = V(this.body.velocity)
       .imul(-1)
@@ -57,6 +64,7 @@ export class Shelves extends BaseEntity implements Entity {
     this.body.angularForce += angularFriction;
   }
 
+  @on("render")
   onRender() {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;

@@ -1,7 +1,8 @@
 import { Sprite } from "pixi.js";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
 import { lerp, smoothStep } from "../core/util/MathUtil";
 import { V2d } from "../core/Vector";
 
@@ -19,10 +20,11 @@ export class SkidMark extends BaseEntity implements Entity {
     this.sprite = sprite;
   }
 
+  @on("add")
   onAdd() {
     this.waitRender(
       10,
-      (_, t) => (this.sprite.alpha = lerp(0.1, 0, smoothStep(t)))
+      (_, t) => (this.sprite.alpha = lerp(0.1, 0, smoothStep(t))),
     ).then(() => this.destroy());
   }
 }

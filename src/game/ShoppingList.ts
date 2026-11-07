@@ -1,7 +1,8 @@
 import { Text } from "pixi.js";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity, { GameEventMap } from "../core/entity/Entity";
-import { Merchandise, MerchandiseType } from "./Merchandise";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
+import { MerchandiseType } from "./Merchandise";
 
 interface ShoppingItem {
   merchandiseType: MerchandiseType;
@@ -39,11 +40,12 @@ export class ShoppingList extends BaseEntity implements Entity {
     this.sprite.layerName = "hud";
   }
 
+  @on("render")
   onRender() {
     this.text.text = this.items
       .map(
         (item) =>
-          `${item.merchandiseType} ${item.numberPurchased}/${item.numberRequired}`
+          `${item.merchandiseType} ${item.numberPurchased}/${item.numberRequired}`,
       )
       .join("\n");
 
@@ -51,11 +53,12 @@ export class ShoppingList extends BaseEntity implements Entity {
     this.text.anchor.set(1, 0);
   }
 
+  @on("merchandisePurchased")
   onMerchandisePurchased({
     merchandise,
   }: GameEventMap["merchandisePurchased"]) {
     const item = this.items.find(
-      (item) => item.merchandiseType === merchandise.merchandiseType
+      (item) => item.merchandiseType === merchandise.merchandiseType,
     );
     if (item) {
       item.numberPurchased++;

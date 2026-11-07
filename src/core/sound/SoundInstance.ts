@@ -1,10 +1,11 @@
-import { SoundName } from "../../../resources/resources";
-import BaseEntity from "../entity/BaseEntity";
-import Entity from "../entity/Entity";
-import Game from "../Game";
+import { MusicName, SoundName } from "../../../resources/resources";
+import { BaseEntity } from "../entity/BaseEntity";
+import { Entity } from "../entity/Entity";
+import { on } from "../entity/handler";
+import { Game } from "../Game";
 import { getSoundBuffer, hasSoundBuffer } from "../resources/sounds";
 import { clamp } from "../util/MathUtil";
-import { rUniform } from "../util/Random";
+import { cosmeticRandom } from "../util/Random";
 
 export interface SoundOptions {
   pan?: number;
@@ -12,15 +13,17 @@ export interface SoundOptions {
   speed?: number;
   continuous?: boolean;
   randomStart?: boolean;
+  /** Seconds into the sound to start playing from */
+  offset?: number;
+  /** Seconds of the sound to play (from `offset`), else to its end */
+  duration?: number;
   reactToSlowMo?: boolean;
   persistenceLevel?: number;
   pauseable?: boolean;
   outnode?: () => AudioNode;
 }
 
-/**
- * Represents a currently playing sound.
- */
+/** Represents a currently playing sound. */
 export class SoundInstance extends BaseEntity implements Entity {
   tags = ["sound"];
   public readonly continuous: boolean;
@@ -46,7 +49,7 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   set pan(value: number) {
-    if (!this.game) {
+    if (!this.isAdded) {
       this.options.pan = value;
     } else {
       this.panNode.pan.value = value;
@@ -54,7 +57,7 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   get pan(): number {
-    if (!this.game) {
+    if (!this.isAdded) {
       return this.options.pan ?? 0;
     } else {
       return this.panNode.pan.value;
@@ -62,7 +65,7 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   set gain(value: number) {
-    if (!this.game) {
+    if (!this.isAdded) {
       this.options.gain = value;
     } else {
       this.gainNode.gain.value = value;
@@ -70,7 +73,7 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   get gain(): number {
-    if (!this.game) {
+    if (!this.isAdded) {
       return this.options.gain ?? 1;
     } else {
       return this.gainNode.gain.value;
@@ -81,8 +84,9 @@ export class SoundInstance extends BaseEntity implements Entity {
   private _resolve!: () => void;
 
   constructor(
-    public readonly soundName: SoundName,
-    private options: SoundOptions = {}
+    /** A sound, or a piece of music once it's loaded (`loadMusic`) */
+    public readonly soundName: SoundName | MusicName,
+    private options: SoundOptions = {},
   ) {
     super();
     this.speed = options.speed ?? 1.0;
@@ -100,6 +104,7 @@ export class SoundInstance extends BaseEntity implements Entity {
     });
   }
 
+  @on("add")
   onAdd({ game }: { game: Game }) {
     const chain = this.makeChain(game);
     if (this.options.outnode) {
@@ -108,18 +113,36 @@ export class SoundInstance extends BaseEntity implements Entity {
       chain.connect(game.masterGain);
     }
 
+    this.lastTick = game.audio.currentTime;
+
+    const offset = this.options.randomStart
+      ? cosmeticRandom.uniform(0, this.sourceNode.buffer!.duration * 0.99)
+      : (this.options.offset ?? 0);
+    this.startSource(offset);
+  }
+
+  /** Where in the buffer this sound stops (unless it's continuous) */
+  private get endTime(): number {
+    const { duration, offset = 0 } = this.options;
+    const bufferDuration = this.sourceNode.buffer!.duration;
+    return duration !== undefined
+      ? Math.min(offset + duration, bufferDuration)
+      : bufferDuration;
+  }
+
+  /** Starts the source node playing from `offset` seconds into the buffer */
+  private startSource(offset: number) {
+    this.elapsed = offset;
     this.sourceNode.onended = () => {
       if (!this.paused) {
         this.destroy();
       }
     };
-
-    this.lastTick = game.audio.currentTime;
-
-    const startTime = this.options.randomStart
-      ? rUniform(0, this.sourceNode.buffer!.duration * 0.99)
-      : undefined;
-    this.sourceNode.start(startTime);
+    if (this.continuous) {
+      this.sourceNode.start(0, offset);
+    } else {
+      this.sourceNode.start(0, offset, Math.max(0, this.endTime - offset));
+    }
   }
 
   /** Creates the  */
@@ -151,8 +174,9 @@ export class SoundInstance extends BaseEntity implements Entity {
     return this._promise;
   }
 
+  @on("tick")
   onTick() {
-    const now = this.game!.audio.currentTime;
+    const now = this.game.audio.currentTime;
     this.elapsed += (now - this.lastTick) * this.sourceNode.playbackRate.value;
     if (this.continuous) {
       this.elapsed = this.elapsed % this.sourceNode.buffer!.duration;
@@ -161,7 +185,7 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   updatePlaybackRate() {
-    if (this.sourceNode && this.game) {
+    if (this.sourceNode && this.isAdded) {
       if (this.reactToSlowMo) {
         this.sourceNode.playbackRate.value = this._speed * this.game.slowMo;
       } else {
@@ -170,11 +194,10 @@ export class SoundInstance extends BaseEntity implements Entity {
     }
   }
 
-  handlers = {
-    slowMoChanged: () => {
-      this.updatePlaybackRate();
-    },
-  };
+  @on("slowMoChanged")
+  onSlowMoChanged() {
+    this.updatePlaybackRate();
+  }
 
   pause() {
     if (this.pausable) {
@@ -188,7 +211,7 @@ export class SoundInstance extends BaseEntity implements Entity {
     if (this.paused) {
       this.paused = false;
       const bufferDuration = this.sourceNode.buffer!.duration;
-      if (!this.continuous && this.elapsed >= bufferDuration) {
+      if (!this.continuous && this.elapsed >= this.endTime) {
         this.destroy();
       } else {
         this.restartSound(this.elapsed % bufferDuration);
@@ -197,30 +220,35 @@ export class SoundInstance extends BaseEntity implements Entity {
   }
 
   restartSound(startTime: number) {
+    this.sourceNode.onended = null;
+    this.sourceNode.stop();
     this.sourceNode.disconnect();
-    const newNode = this.game!.audio.createBufferSource();
+    const newNode = this.game.audio.createBufferSource();
     newNode.buffer = this.sourceNode.buffer;
     newNode.loop = this.sourceNode.loop;
+    newNode.playbackRate.value = this.sourceNode.playbackRate.value;
     this.sourceNode = newNode;
     this.sourceNode.connect(this.panNode);
-    this.sourceNode.start(
-      this.game!.audio.currentTime,
-      clamp(startTime, 0, this.sourceNode.buffer!.duration)
-    );
+    this.startSource(clamp(startTime, 0, this.sourceNode.buffer!.duration));
   }
 
   jumpToRandom() {
-    this.restartSound(rUniform(0, this.sourceNode.buffer!.duration * 0.99));
+    this.restartSound(
+      cosmeticRandom.uniform(0, this.sourceNode.buffer!.duration * 0.99),
+    );
   }
 
+  @on("pause")
   onPause() {
     this.pause();
   }
 
+  @on("unpause")
   onUnpause() {
     this.unpause();
   }
 
+  @on("destroy")
   onDestroy() {
     this.sourceNode.stop();
     this._resolve();

@@ -1,18 +1,21 @@
-import { Body, Circle } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import AimSpring from "../core/physics/AimSpring";
-import { normalizeAngle, polarToVec } from "../core/util/MathUtil";
+import { CollisionGroups } from "../config/CollisionGroups";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { createRigid2D } from "../core/physics/body/bodyFactories";
+import { Circle } from "../core/physics/shapes/Circle";
+import { AimSpring } from "../core/physics/springs/AimSpring";
+import { normalizeAngle } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
 import { CartSpring } from "./CartSpring";
-import { CollisionGroups } from "../config/CollisionGroups";
+import { HumanArm } from "./HumanArm";
 import { HumanSprite } from "./HumanSprite";
 import { Stride } from "./Stride";
 import { VelocityDisplay } from "./VelocityDisplay";
 import { WalkingForces } from "./WalkingForces";
 import { WalkSoundPlayer } from "./WalkSoundPlayer";
-import { HumanArm, ARM_LENGTH } from "./HumanArm";
 
 // Walk spring config
 const PUSH_ACCELERATION = 30;
@@ -47,22 +50,27 @@ export class Human extends BaseEntity implements Entity {
       position: V2d;
       angle: number;
       walkSpeed: number;
-    }
+    },
   ) {
     super();
 
-    this.body = new Body({
+    // No damping: the old p2 world never applied it (this used to say
+    // `damping: 10`, which the engine now clamps to 1 and would stop the
+    // player dead every step)
+    this.body = createRigid2D({
+      motion: "dynamic",
       mass: 1,
       angle: options.angle,
       position: options.position.clone(),
-      damping: 10,
     });
 
     const radius = 0.3; // meters
 
-    const shape = new Circle({ radius: radius * 0.6 });
-    shape.collisionGroup = CollisionGroups.Player;
-    shape.collisionMask = CollisionGroups.All;
+    const shape = new Circle({
+      radius: radius * 0.6,
+      collisionGroup: CollisionGroups.Player,
+      collisionMask: CollisionGroups.All,
+    });
     this.body.addShape(shape);
 
     this.humanSprite = this.addChild(
@@ -76,8 +84,8 @@ export class Human extends BaseEntity implements Entity {
           leftArm: "demitriLeftArm",
           rightArm: "demitriRightArm",
         },
-        radius
-      )
+        radius,
+      ),
     );
 
     this.stride = this.addChild(new Stride(this, STEPS_PER_METER));
@@ -89,10 +97,10 @@ export class Human extends BaseEntity implements Entity {
 
     this.addChild(new VelocityDisplay(this.body));
     this.leftArm = this.addChild(
-      new HumanArm(this, V(0, -(radius * 0.8)), "left")
+      new HumanArm(this, V(0, -(radius * 0.8)), "left"),
     );
     this.rightArm = this.addChild(
-      new HumanArm(this, V(0, radius * 0.8), "right")
+      new HumanArm(this, V(0, radius * 0.8), "right"),
     );
   }
 
@@ -120,7 +128,8 @@ export class Human extends BaseEntity implements Entity {
   }
 
   /** Called every update cycle */
-  onTick(dt: number) {
+  @on("tick")
+  onTick() {
     // Update walk spring
     if (this.cart) {
       this.walkSpring.maxAcceleration = PUSH_ACCELERATION;
@@ -139,10 +148,10 @@ export class Human extends BaseEntity implements Entity {
       const [leftHandTarget, rightHandTarget] =
         this.cart.getWorldHandPositions();
       const leftHandWorld = this.localToWorld(
-        this.leftArm.getHandLocalPosition()
+        this.leftArm.getHandLocalPosition(),
       );
       const rightHandWorld = this.localToWorld(
-        this.rightArm.getHandLocalPosition()
+        this.rightArm.getHandLocalPosition(),
       );
 
       const leftDistance = leftHandWorld.isub(leftHandTarget).magnitude;

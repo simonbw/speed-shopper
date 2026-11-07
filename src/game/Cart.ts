@@ -1,16 +1,19 @@
-import { Body, Convex, Line, vec2 } from "p2";
 import { Sprite } from "pixi.js";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { SoundName } from "../../resources/resources";
+import { CollisionGroups } from "../config/CollisionGroups";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { createRigid2D } from "../core/physics/body/bodyFactories";
+import { Convex } from "../core/physics/shapes/Convex";
+import { lineFromPoints } from "../core/physics/utils/ShapeUtils";
+import { PositionalSound } from "../core/sound/PositionalSound";
+import { cosmeticRandom } from "../core/util/Random";
 import { V } from "../core/Vector";
 import { CartWheel } from "./CartWheel";
-import { SoundName } from "../../resources/resources";
-import { PositionalSound } from "../core/sound/PositionalSound";
-import { choose, rUniform } from "../core/util/Random";
 import { Merchandise } from "./Merchandise";
-import { lineFromPoints } from "../core/util/PhysicsUtils";
-import { CollisionGroups } from "../config/CollisionGroups";
 
 const PUSH_STRENGTH = 7.0;
 const PUSH_TORQUE = 0.15;
@@ -39,8 +42,8 @@ export class Cart extends BaseEntity implements Entity {
     this.sprite.anchor.set(0.5, 0.5);
     this.sprite.setSize(1, 1);
 
-    this.body = new Body({
-      type: Body.DYNAMIC,
+    this.body = createRigid2D({
+      motion: "dynamic",
       mass: 1,
       position,
     });
@@ -56,9 +59,9 @@ export class Cart extends BaseEntity implements Entity {
 
     const shape = new Convex({
       vertices: [bl.clone(), fl.clone(), fr.clone(), br.clone()],
+      collisionGroup: CollisionGroups.CartExterior,
+      collisionMask: CollisionGroups.All,
     });
-    shape.collisionGroup = CollisionGroups.CartExterior;
-    shape.collisionMask = CollisionGroups.All;
     this.body.addShape(shape);
 
     // The inverse of mainShape for keeping merchandise in the cart
@@ -118,18 +121,19 @@ export class Cart extends BaseEntity implements Entity {
     }
   }
 
+  @on("render")
   onRender() {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;
   }
 
   onImpact() {
-    const sound = choose(...IMPACT_SOUNDS);
+    const sound = cosmeticRandom.choose(...IMPACT_SOUNDS);
     this.game?.addEntity(
       new PositionalSound(sound, this.getPosition(), {
         gain: 0.5,
-        speed: rUniform(0.9, 1.1),
-      })
+        speed: cosmeticRandom.uniform(0.9, 1.1),
+      }),
     );
   }
 
@@ -140,7 +144,7 @@ export class Cart extends BaseEntity implements Entity {
   getWeight() {
     const merchWeight = this.merchandises.reduce(
       (sum, merchandise) => sum + merchandise.body.mass,
-      0
+      0,
     );
     return this.body.mass + merchWeight;
   }

@@ -1,5 +1,6 @@
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
 import { V } from "../core/Vector";
 import { Human } from "./Human";
 
@@ -15,7 +16,8 @@ export class Stride extends BaseEntity implements Entity {
     this.stepsPerMeter = stepsPerMeter;
   }
 
-  onTick(dt: number) {
+  @on("tick")
+  onTick({ dt }: GameEventMap["tick"]) {
     const speed = V(this.human.body.velocity).magnitude;
     const distanceMoved = speed * dt;
 

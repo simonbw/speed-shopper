@@ -1,5 +1,6 @@
-import { Body } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { GameEventMap } from "../core/entity/Entity";
+import { on } from "../core/entity/handler";
 import { lerpV2d, polarToVec, stepToward } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Human } from "./Human";
@@ -27,33 +28,27 @@ export class HumanArm extends BaseEntity {
     private human: Human,
     shoulderPosition: V2d,
     side: "left" | "right",
-    private extendSpeed: number = 10
+    private extendSpeed: number = 10,
   ) {
     super();
 
     this.shoulderPosition = shoulderPosition;
     this.side = side;
-
-    this.body = new Body({
-      mass: 0,
-      position: shoulderPosition.clone(),
-      type: Body.KINEMATIC,
-      collisionResponse: false,
-    });
   }
 
-  onTick(dt: number) {
+  @on("tick")
+  onTick({ dt }: GameEventMap["tick"]) {
     const game = this.game!;
     this._extension = stepToward(
       this._extension,
       this.extensionTarget,
-      dt * this.extendSpeed
+      dt * this.extendSpeed,
     );
 
     // Find nearby merchandise
     const handPosition = this.getHandWorldPosition();
     if (this.merchandise) {
-      this.merchandise.body.position = this.getHandWorldPosition();
+      this.merchandise.body.position.set(this.getHandWorldPosition());
 
       if (this._extension === 0) {
         if (this.human.cart) {
@@ -63,8 +58,7 @@ export class HumanArm extends BaseEntity {
         } else {
           // Keep merchandise momentum
           const merchVelocity = this.human.body.getVelocityAtPoint(
-            V(),
-            this.merchandise.getPosition().isub(this.human.getPosition())
+            this.merchandise.getPosition().isub(this.human.getPosition()),
           );
           this.merchandise.drop(merchVelocity);
           this.merchandise = undefined;
@@ -95,7 +89,7 @@ export class HumanArm extends BaseEntity {
     const shoulder = this.shoulderPosition;
     const extendDirection = this.side === "left" ? -1 : 1;
     const extended = shoulder.add(
-      polarToVec(extendDirection * Math.PI * 0.45, ARM_LENGTH * 0.8)
+      polarToVec(extendDirection * Math.PI * 0.45, ARM_LENGTH * 0.8),
     );
 
     if (this.human.cart) {

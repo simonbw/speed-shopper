@@ -1,14 +1,16 @@
-import p2, { Body, vec2 } from "p2";
 import { Sprite } from "pixi.js";
+import orangeDef from "../../resources/entity-defs/orange.json";
+import { CollisionGroups } from "../config/CollisionGroups";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity, GameEventMap } from "../core/entity/Entity";
+import { GameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { EntityDef } from "../core/EntityDef";
+import { Body } from "../core/physics/body/Body";
+import { stepToward } from "../core/util/MathUtil";
 import { V } from "../core/Vector";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
 import { Cart } from "./Cart";
 import { HumanArm } from "./HumanArm";
-import { CollisionGroups } from "../config/CollisionGroups";
-import { RESOURCES } from "../../resources/resources";
-import { stepToward } from "../core/util/MathUtil";
 
 const DROPPED_FRICTION = 2.0;
 const DROPPED_ANGULAR_FRICTION = 0.2;
@@ -30,13 +32,14 @@ export class Merchandise extends BaseEntity implements Entity {
   merchandiseType: MerchandiseType = "orange";
 
   constructor(position: [number, number]) {
-    super(RESOURCES.entityDefs.orange);
+    super(orangeDef as unknown as EntityDef);
     this.tags.push("merchandise");
 
-    this.body.position = V(position);
+    this.body.position.set(position);
     this.sprite.position.set(...position);
   }
 
+  @on("tick")
   onTick() {
     if (this.state === "dropped") {
       const friction = V(this.body.velocity)
@@ -51,7 +54,7 @@ export class Merchandise extends BaseEntity implements Entity {
       const cart = this.cart!;
       // Apply cart friction
       const positionInCart = this.getPosition().isub(cart.body.position);
-      const friction = V(cart.body.getVelocityAtPoint(V(), positionInCart))
+      const friction = V(cart.body.getVelocityAtPoint(positionInCart))
         .isub(this.body.velocity)
         .imul(CARTED_FRICTION)
         .imul(this.body.mass);
@@ -67,17 +70,18 @@ export class Merchandise extends BaseEntity implements Entity {
     }
   }
 
-  onRender(dt: number) {
+  @on("render")
+  onRender({ dt }: GameEventMap["render"]) {
     const stepSize = SPRITE_STEP_SIZE * dt;
     this.sprite.position.x = stepToward(
       this.sprite.position.x,
       this.body.position[0],
-      stepSize
+      stepSize,
     );
     this.sprite.position.y = stepToward(
       this.sprite.position.y,
       this.body.position[1],
-      stepSize
+      stepSize,
     );
     this.sprite.rotation = this.body.angle;
   }
@@ -91,15 +95,15 @@ export class Merchandise extends BaseEntity implements Entity {
   drop(velocity: [number, number]) {
     this.body.collisionResponse = true;
     this.state = "dropped";
-    vec2.copy(this.body.velocity, velocity);
+    this.body.velocity.set(velocity);
   }
 
   putInCart(cart: Cart) {
     this.state = "carted";
     this.cart = cart;
     this.body.collisionResponse = true;
-    this.body.position = V(cart.body.position);
-    this.body.velocity = V(cart.body.velocity);
+    this.body.position.set(cart.body.position);
+    this.body.velocity.set(cart.body.velocity);
 
     for (const shape of this.body.shapes) {
       shape.collisionGroup = CollisionGroups.CartedMerchandise;

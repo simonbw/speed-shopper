@@ -1,18 +1,19 @@
-import { Body, Box, vec2 } from "p2";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
-import { loadGameSprite } from "../core/entity/GameSprite";
-import { V } from "../core/Vector";
 import { CollisionGroups } from "../config/CollisionGroups";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
+import { loadGameSprite } from "../core/entity/GameSprite";
+import { createRigid2D } from "../core/physics/body/bodyFactories";
+import { Box } from "../core/physics/shapes/Box";
+import { V } from "../core/Vector";
 
-export default class Wall extends BaseEntity implements Entity {
+export class Wall extends BaseEntity implements Entity {
   constructor([x1, y1]: [number, number], [x2, y2]: [number, number]) {
     super();
 
     const width = 0.15;
     const color = 0xaaaaaa;
 
-    const length = vec2.dist([x1, y1], [x2, y2]);
+    const length = V(x1, y1).distanceTo([x2, y2]);
     const x = (x1 + x2) / 2;
     const y = (y1 + y2) / 2;
 
@@ -40,15 +41,18 @@ export default class Wall extends BaseEntity implements Entity {
 
     this.sprites = [wallSprite];
 
-    this.body = new Body({
-      mass: 0,
+    this.body = createRigid2D({
+      motion: "static",
       position: [x, y],
       angle,
     });
 
-    const shape = new Box({ width, height: length });
-    shape.collisionGroup = CollisionGroups.Environment;
-    shape.collisionMask = CollisionGroups.All;
+    const shape = new Box({
+      width,
+      height: length,
+      collisionGroup: CollisionGroups.Environment,
+      collisionMask: CollisionGroups.All,
+    });
     this.body.addShape(shape);
   }
 }

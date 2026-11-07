@@ -1,8 +1,13 @@
-import { Body, Box, LockConstraint, RevoluteConstraint } from "p2";
 import { Sprite } from "pixi.js";
-import BaseEntity from "../core/entity/BaseEntity";
-import Entity from "../core/entity/Entity";
+import { BaseEntity } from "../core/entity/BaseEntity";
+import { Entity } from "../core/entity/Entity";
 import { GameSprite, loadGameSprite } from "../core/entity/GameSprite";
+import { on } from "../core/entity/handler";
+import { Body } from "../core/physics/body/Body";
+import { createRigid2D } from "../core/physics/body/bodyFactories";
+import { LockConstraint } from "../core/physics/constraints/LockConstraint";
+import { RevoluteConstraint } from "../core/physics/constraints/RevoluteConstraint";
+import { Box } from "../core/physics/shapes/Box";
 import { polarToVec } from "../core/util/MathUtil";
 import { V, V2d } from "../core/Vector";
 import { Cart } from "./Cart";
@@ -42,14 +47,17 @@ export class CartWheel extends BaseEntity implements Entity {
       ? cart.localToWorld(positionOnCart)
       : cart.localToWorld(positionOnCart.add([0, swivelAmount]));
 
-    this.body = new Body({
-      type: Body.DYNAMIC,
+    this.body = createRigid2D({
+      motion: "dynamic",
       mass: 0.1,
       position,
     });
 
-    const shape = new Box({ width: 0.03, height: 0.1 });
-    shape.collisionResponse = false;
+    const shape = new Box({
+      width: 0.03,
+      height: 0.1,
+      collisionResponse: false,
+    });
     this.body.addShape(shape);
 
     // Keep the wheel attached to the cart
@@ -66,7 +74,8 @@ export class CartWheel extends BaseEntity implements Entity {
     }
   }
 
-  onTick(dt: number) {
+  @on("tick")
+  onTick() {
     const forward = polarToVec(this.body.angle + Math.PI / 2, 1);
     const normal = forward.rotate90cw();
     const velocity = V(this.body.velocity);
@@ -99,6 +108,7 @@ export class CartWheel extends BaseEntity implements Entity {
     this.body.angularForce += angularFrictionAmount;
   }
 
+  @on("render")
   onRender() {
     this.sprite.position.set(...this.body.position);
     this.sprite.rotation = this.body.angle;
